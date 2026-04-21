@@ -1,20 +1,80 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { motion } from 'motion/react'
 
 export const Route = createFileRoute('/')({ component: Home })
 
+const container = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.09,
+      delayChildren: 0.1,
+    },
+  },
+}
+
+const item = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] as const },
+  },
+}
+
 function Home() {
   return (
-    <main className="page-wrap px-4 pb-8 pt-14">
-      <section className="island-shell rise-in relative overflow-hidden rounded-[2rem] px-6 py-12 sm:px-10 sm:py-16">
-        <p className="island-kicker mb-3">penumbra</p>
-        <h1 className="display-title mb-5 max-w-3xl text-4xl leading-[1.02] font-bold tracking-tight text-[var(--sea-ink)] sm:text-6xl">
-          Evidence z&nbsp;temné komory.
-        </h1>
-        <p className="max-w-2xl text-base text-[var(--sea-ink-soft)] sm:text-lg">
-          Archiv negativů, zvětšenin a&nbsp;limitovaných edic pro fotografy,
-          kteří pracují na&nbsp;film.
-        </p>
-      </section>
-    </main>
+    <motion.section
+      className="relative py-16 sm:py-24"
+      initial="hidden"
+      animate="visible"
+      variants={container}
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-1/3 left-1/4 -z-10 h-[480px] w-[480px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-70 blur-3xl"
+        style={{
+          background:
+            'radial-gradient(circle, var(--safelight-soft) 0%, transparent 55%)',
+        }}
+      />
+
+      <motion.p variants={item} className="kicker mb-6">
+        N° 01 · Dashboard
+      </motion.p>
+
+      <motion.h1
+        variants={item}
+        className="font-serif text-ink mb-8 text-[clamp(3.5rem,10vw,10rem)] leading-[0.9] font-normal tracking-tight italic"
+      >
+        penumbra
+      </motion.h1>
+
+      <motion.p
+        variants={item}
+        className="text-ink-soft max-w-xl text-lg leading-relaxed sm:text-xl"
+      >
+        An inventory of negatives, darkroom enlargements, and
+        limited&nbsp;editions. Kept honest, kept quiet.
+      </motion.p>
+
+      <motion.div
+        variants={item}
+        className="border-hairline mt-16 grid grid-cols-3 border-t"
+      >
+        <Stat label="Negatives" value="—" />
+        <Stat label="Editions" value="—" />
+        <Stat label="Prints" value="—" />
+      </motion.div>
+    </motion.section>
+  )
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border-hairline first:border-l-0 border-l py-5 pl-6 first:pl-0">
+      <p className="kicker mb-2">{label}</p>
+      <p className="font-mono text-ink text-3xl tabular-nums">{value}</p>
+    </div>
   )
 }

@@ -2,7 +2,8 @@ import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import Footer from '../components/Footer'
-import Header from '../components/Header'
+import Sidebar from '../components/Sidebar'
+import MobileNav from '../components/MobileNav'
 
 import appCss from '../styles.css?url'
 
@@ -39,10 +40,23 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
-      <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
-        <Header />
-        {children}
-        <Footer />
+      <body className="font-sans text-ink bg-background antialiased [overflow-wrap:anywhere]">
+        <div className="flex min-h-screen">
+          <aside className="border-hairline sticky top-0 hidden h-screen border-r md:flex">
+            <Sidebar />
+          </aside>
+
+          <div className="flex min-w-0 flex-1 flex-col">
+            <MobileNav />
+
+            <main className="flex-1 px-6 md:px-10 lg:px-16">
+              <div className="mx-auto w-full max-w-[1120px]">{children}</div>
+            </main>
+
+            <Footer />
+          </div>
+        </div>
+
         <TanStackDevtools
           config={{
             position: 'bottom-right',

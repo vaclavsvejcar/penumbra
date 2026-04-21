@@ -2,9 +2,14 @@ export default function Footer() {
   const year = new Date().getFullYear()
 
   return (
-    <footer className="mt-20 border-t border-[var(--line)] px-4 pb-14 pt-10 text-[var(--sea-ink-soft)]">
-      <div className="page-wrap flex items-center justify-center gap-4 text-center">
-        <p className="m-0 text-sm">&copy; {year} penumbra</p>
+    <footer className="hairline-t mt-24 py-10">
+      <div className="page-wrap flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-between sm:text-left">
+        <p className="kicker text-ink-muted m-0">
+          penumbra · archive of the darkroom
+        </p>
+        <p className="text-ink-muted m-0 text-xs tabular-nums">
+          © {year}
+        </p>
       </div>
     </footer>
   )

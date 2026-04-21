@@ -16,6 +16,16 @@ Inventory of negatives, enlargements, and limited editions for film photographer
 
 ## Setup
 
+One-command launch:
+
+```bash
+./run.sh          # clean build + start production server on http://localhost:3000
+./run.sh --dev    # dev mode with Vite HMR
+./run.sh --install  # install deps and migrate DB (no start)
+```
+
+Manual setup:
+
 ```bash
 pnpm install
 pnpm db:migrate   # creates penumbra.db in the project root
