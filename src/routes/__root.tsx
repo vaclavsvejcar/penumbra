@@ -1,7 +1,6 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
-import Footer from '../components/Footer'
 import Sidebar from '../components/Sidebar'
 import MobileNav from '../components/MobileNav'
 
@@ -52,8 +51,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <main className="flex-1 px-6 md:px-10 lg:px-16">
               <div className="mx-auto w-full max-w-[1120px]">{children}</div>
             </main>
-
-            <Footer />
           </div>
         </div>
 
