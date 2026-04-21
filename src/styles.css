@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400..700&family=Instrument+Serif:ital@0;1&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import 'react-phone-number-input/style.css';
 
 @custom-variant dark (&:is(.dark *));
 
