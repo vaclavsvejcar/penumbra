@@ -1,15 +1,15 @@
 # penumbra
 
-Evidence negativů, zvětšenin a limitovaných edic pro fotografy na film.
+Inventory of negatives, enlargements, and limited editions for film photographers.
 
 ## Stack
 
 - [TanStack Start](https://tanstack.com/start) — React full-stack framework (Vite + Nitro)
-- [Drizzle ORM](https://orm.drizzle.team) + [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) — typovaná perzistence, lokální SQLite
-- [Tailwind CSS](https://tailwindcss.com) + [shadcn/ui](https://ui.shadcn.com) — styling a komponenty
+- [Drizzle ORM](https://orm.drizzle.team) + [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) — typed persistence, local SQLite
+- [Tailwind CSS](https://tailwindcss.com) + [shadcn/ui](https://ui.shadcn.com) — styling and components
 - TypeScript, Vitest
 
-## Požadavky
+## Requirements
 
 - Node.js ≥ 20
 - pnpm ≥ 9
@@ -18,42 +18,42 @@ Evidence negativů, zvětšenin a limitovaných edic pro fotografy na film.
 
 ```bash
 pnpm install
-pnpm db:migrate   # vytvoří penumbra.db v kořeni projektu
+pnpm db:migrate   # creates penumbra.db in the project root
 pnpm dev          # http://localhost:3000
 ```
 
-## Skripty
+## Scripts
 
-| Skript | Co dělá |
+| Script | What it does |
 | --- | --- |
-| `pnpm dev` | Dev server na portu 3000 |
-| `pnpm build` | Produkční build |
-| `pnpm preview` | Náhled produkčního buildu |
-| `pnpm test` | Vitest |
-| `pnpm db:generate` | Vygeneruje migrace ze schématu (`src/db/schema.ts`) |
-| `pnpm db:migrate` | Aplikuje migrace na `penumbra.db` |
-| `pnpm db:studio` | Drizzle Studio (prohlížeč databáze) |
+| `pnpm dev` | Dev server on port 3000 |
+| `pnpm build` | Production build |
+| `pnpm preview` | Preview the production build |
+| `pnpm test` | Run Vitest |
+| `pnpm db:generate` | Generate migrations from the schema (`src/db/schema.ts`) |
+| `pnpm db:migrate` | Apply migrations to `penumbra.db` |
+| `pnpm db:studio` | Drizzle Studio (database browser) |
 
-## Struktura
+## Structure
 
 ```
 src/
-├── routes/          # file-based routy (TanStack Router)
+├── routes/          # file-based routes (TanStack Router)
 │   ├── __root.tsx   # root layout
-│   └── index.tsx    # domovská stránka
-├── components/      # shadcn + vlastní komponenty
+│   └── index.tsx    # home page
+├── components/      # shadcn and custom components
 ├── db/
-│   ├── client.ts    # Drizzle klient (better-sqlite3)
-│   ├── schema.ts    # schéma databáze
-│   └── migrations/  # generované SQL migrace
-├── lib/             # pomocné utility
+│   ├── client.ts    # Drizzle client (better-sqlite3)
+│   ├── schema.ts    # database schema
+│   └── migrations/  # generated SQL migrations
+├── lib/             # helper utilities
 ├── router.tsx       # router config
-└── styles.css       # globální styly + Tailwind
+└── styles.css       # global styles and Tailwind
 ```
 
-Databázový soubor `penumbra.db` je v `.gitignore` — každé prostředí má vlastní lokální DB.
+The `penumbra.db` file is in `.gitignore` — each environment has its own local database.
 
-## Přidání shadcn komponenty
+## Adding a shadcn component
 
 ```bash
 pnpm dlx shadcn@latest add button
