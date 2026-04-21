@@ -28,37 +28,63 @@ function parseId(value: unknown): number {
   return n
 }
 
-function parseCustomerFields(raw: unknown): CustomerFields {
+function parseCustomerPatch(raw: unknown): Partial<CustomerFields> {
   if (!raw || typeof raw !== 'object') {
     throw new Error('Invalid payload')
   }
   const input = raw as Record<string, unknown>
+  const patch: Partial<CustomerFields> = {}
 
-  const name = typeof input.name === 'string' ? input.name.trim() : ''
-  if (name.length === 0) throw new Error('Name is required')
-
-  const kindRaw = typeof input.kind === 'string' ? input.kind : 'collector'
-  const kind = (customerKinds as readonly string[]).includes(kindRaw)
-    ? (kindRaw as CustomerKind)
-    : 'collector'
-
-  const email = nullableTrimmed(input.email)
-  if (email !== null && !isValidEmail(email)) {
-    throw new Error('Invalid email')
+  if ('name' in input) {
+    const name = typeof input.name === 'string' ? input.name.trim() : ''
+    if (name.length === 0) throw new Error('Name is required')
+    patch.name = name
   }
 
-  const phone = nullableTrimmed(input.phone)
-  if (phone !== null && !isValidPhoneNumber(phone)) {
-    throw new Error('Invalid phone number')
+  if ('kind' in input) {
+    const kindRaw = typeof input.kind === 'string' ? input.kind : 'collector'
+    patch.kind = (customerKinds as readonly string[]).includes(kindRaw)
+      ? (kindRaw as CustomerKind)
+      : 'collector'
   }
 
+  if ('email' in input) {
+    const email = nullableTrimmed(input.email)
+    if (email !== null && !isValidEmail(email)) {
+      throw new Error('Invalid email')
+    }
+    patch.email = email
+  }
+
+  if ('phone' in input) {
+    const phone = nullableTrimmed(input.phone)
+    if (phone !== null && !isValidPhoneNumber(phone)) {
+      throw new Error('Invalid phone number')
+    }
+    patch.phone = phone
+  }
+
+  if ('city' in input) {
+    patch.city = nullableTrimmed(input.city)
+  }
+
+  if ('notes' in input) {
+    patch.notes = nullableTrimmed(input.notes)
+  }
+
+  return patch
+}
+
+function parseCustomerFields(raw: unknown): CustomerFields {
+  const patch = parseCustomerPatch(raw)
+  if (patch.name === undefined) throw new Error('Name is required')
   return {
-    name,
-    kind,
-    email,
-    phone,
-    city: nullableTrimmed(input.city),
-    notes: nullableTrimmed(input.notes),
+    name: patch.name,
+    kind: patch.kind ?? 'collector',
+    email: patch.email ?? null,
+    phone: patch.phone ?? null,
+    city: patch.city ?? null,
+    notes: patch.notes ?? null,
   }
 }
 
@@ -90,16 +116,16 @@ export const updateCustomer = createServerFn({ method: 'POST' })
   .inputValidator((raw: unknown) => {
     if (!raw || typeof raw !== 'object') throw new Error('Invalid payload')
     const input = raw as Record<string, unknown>
-    return {
-      id: parseId(input.id),
-      ...parseCustomerFields(input),
-    }
+    const id = parseId(input.id)
+    const patch = parseCustomerPatch(input)
+    if (Object.keys(patch).length === 0) throw new Error('Nothing to update')
+    return { id, ...patch }
   })
   .handler(async ({ data }) => {
-    const { id, ...fields } = data
+    const { id, ...patch } = data
     const [row] = await db
       .update(customers)
-      .set(fields)
+      .set(patch)
       .where(eq(customers.id, id))
       .returning()
     if (!row) throw new Error('Customer not found')
