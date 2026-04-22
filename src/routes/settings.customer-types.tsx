@@ -1,12 +1,17 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { motion } from 'motion/react'
-import { Archive, Check, Pencil, Plus, RotateCcw } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Badge } from '#/components/ui/badge'
-import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
-import { Label } from '#/components/ui/label'
-import { LookupSearch } from '#/components/LookupSearch'
+import {
+  FieldWrap,
+  LookupFormActions,
+  LookupHeader,
+  LookupList,
+  LookupRowActions,
+  LookupSearch,
+  useLookupAdmin,
+} from '#/components/lookup'
 import type { CustomerType } from '#/db/schema'
 import { cn } from '#/lib/utils'
 import {
@@ -22,7 +27,7 @@ export const Route = createFileRoute('/settings/customer-types')({
   loader: () => listAllCustomerTypes(),
 })
 
-const item = {
+const fade = {
   hidden: { opacity: 0, y: 6 },
   visible: {
     opacity: 1,
@@ -33,162 +38,72 @@ const item = {
 
 function CustomerTypesAdmin() {
   const rows = Route.useLoaderData()
-  const router = useRouter()
-  const [creating, setCreating] = useState(false)
-  const [editingId, setEditingId] = useState<number | null>(null)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (q) {
-      return rows.filter(
-        (r) =>
-          r.label.toLowerCase().includes(q) ||
-          r.code.toLowerCase().includes(q),
-      )
-    }
-    return rows.filter((r) => r.archivedAt === null)
-  }, [rows, query])
-
-  async function handleArchive(id: number) {
-    setBusy(true)
-    setError(null)
-    try {
-      await archiveCustomerType({ data: id })
-      await router.invalidate()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Archive failed.')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function handleUnarchive(id: number) {
-    setBusy(true)
-    setError(null)
-    try {
-      await unarchiveCustomerType({ data: id })
-      await router.invalidate()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Restore failed.')
-    } finally {
-      setBusy(false)
-    }
-  }
+  const admin = useLookupAdmin({
+    rows,
+    matchesQuery: (r, q) =>
+      r.label.toLowerCase().includes(q) || r.code.toLowerCase().includes(q),
+    archiveFn: archiveCustomerType,
+    unarchiveFn: unarchiveCustomerType,
+  })
 
   return (
-    <motion.div initial="hidden" animate="visible" variants={item}>
-      <div className="mb-6 flex items-end justify-between gap-4">
-        <div>
-          <p className="kicker mb-1.5">Lookup</p>
-          <h2 className="font-serif text-ink text-2xl leading-tight italic">
-            Customer types
-          </h2>
-          <p className="text-ink-soft mt-2 max-w-xl text-sm leading-relaxed">
-            Displayed when creating or editing a customer. Archived types stay
-            on existing customers but disappear from selection lists.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setCreating(true)
-            setEditingId(null)
-          }}
-          disabled={creating || busy}
-          className="shrink-0"
-        >
-          <Plus aria-hidden className="size-4" />
-          Add type
-        </Button>
-      </div>
+    <motion.div initial="hidden" animate="visible" variants={fade}>
+      <LookupHeader
+        title="Customer types"
+        description="Displayed when creating or editing a customer. Archived types stay on existing customers but disappear from selection lists."
+        addLabel="Add type"
+        onAdd={admin.startCreating}
+        addDisabled={admin.creating || admin.busy}
+      />
 
-      {error ? (
+      {admin.error ? (
         <p className="text-destructive mb-4 text-sm" role="alert">
-          {error}
+          {admin.error}
         </p>
       ) : null}
 
       <LookupSearch
-        value={query}
-        onChange={setQuery}
+        value={admin.query}
+        onChange={admin.setQuery}
         placeholder="Find a type…"
         total={rows.length}
-        filtered={filtered.length}
+        filtered={admin.filtered.length}
       />
 
-      <ul>
-        {creating ? (
-          <li className="border-hairline bg-muted/20 border-b">
-            <NewTypeRow
-              existingOrders={rows.map((r) => r.sortOrder)}
-              onCancel={() => setCreating(false)}
-              onSaved={async () => {
-                setCreating(false)
-                await router.invalidate()
-              }}
-              onError={setError}
-            />
-          </li>
-        ) : null}
-        {rows.length === 0 && !creating ? (
-          <li className="border-hairline border-b py-12 text-center">
-            <p className="kicker text-ink-muted mb-1">Empty list</p>
-            <p className="text-ink-soft font-serif italic">
-              No customer types defined yet.
-            </p>
-          </li>
-        ) : filtered.length === 0 && !creating ? (
-          <li className="border-hairline border-b py-12 text-center">
-            <p className="kicker text-ink-muted mb-1">No matches</p>
-            <p className="text-ink-soft font-serif italic">
-              Nothing found for “{query.trim()}”.
-            </p>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setQuery('')}
-              className="mt-3"
-            >
-              Clear search
-            </Button>
-          </li>
-        ) : null}
-        {filtered.map((t) =>
-          editingId === t.id ? (
-            <li
-              key={t.id}
-              className="border-hairline bg-muted/20 border-b"
-            >
-              <EditTypeRow
-                type={t}
-                onCancel={() => setEditingId(null)}
-                onSaved={async () => {
-                  setEditingId(null)
-                  await router.invalidate()
-                }}
-                onError={setError}
-              />
-            </li>
-          ) : (
-            <li key={t.id} className="border-hairline border-b">
-              <DisplayRow
-                type={t}
-                busy={busy}
-                onEdit={() => {
-                  setEditingId(t.id)
-                  setCreating(false)
-                }}
-                onArchive={() => handleArchive(t.id)}
-                onUnarchive={() => handleUnarchive(t.id)}
-              />
-            </li>
-          ),
+      <LookupList
+        rows={admin.filtered}
+        totalRows={rows.length}
+        query={admin.query}
+        onClearQuery={admin.clearQuery}
+        creating={admin.creating}
+        editingId={admin.editingId}
+        emptyMessage="No customer types defined yet."
+        renderNewRow={() => (
+          <NewTypeRow
+            existingOrders={rows.map((r) => r.sortOrder)}
+            onCancel={admin.cancelCreating}
+            onSaved={admin.reloadAfterSave}
+            onError={admin.setError}
+          />
         )}
-      </ul>
+        renderEditRow={(t) => (
+          <EditTypeRow
+            type={t}
+            onCancel={admin.cancelEditing}
+            onSaved={admin.reloadAfterSave}
+            onError={admin.setError}
+          />
+        )}
+        renderDisplayRow={(t) => (
+          <DisplayRow
+            type={t}
+            busy={admin.busy}
+            onEdit={() => admin.startEditing(t.id)}
+            onArchive={() => admin.handleArchive(t.id)}
+            onUnarchive={() => admin.handleUnarchive(t.id)}
+          />
+        )}
+      />
     </motion.div>
   )
 }
@@ -233,36 +148,14 @@ function DisplayRow({
       <span className="text-ink-muted text-right font-mono text-xs tabular-nums">
         {type.sortOrder}
       </span>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onEdit}
-        disabled={busy}
-        aria-label={`Edit ${type.label}`}
-      >
-        <Pencil aria-hidden className="size-3.5" />
-      </Button>
-      {archived ? (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onUnarchive}
-          disabled={busy}
-          aria-label={`Restore ${type.label}`}
-        >
-          <RotateCcw aria-hidden className="size-3.5" />
-        </Button>
-      ) : (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onArchive}
-          disabled={busy}
-          aria-label={`Archive ${type.label}`}
-        >
-          <Archive aria-hidden className="size-3.5" />
-        </Button>
-      )}
+      <LookupRowActions
+        label={type.label}
+        archived={archived}
+        busy={busy}
+        onEdit={onEdit}
+        onArchive={onArchive}
+        onUnarchive={onUnarchive}
+      />
     </div>
   )
 }
@@ -386,69 +279,56 @@ function FormRow({
   onSave: () => void
   submitLabel: string
 }) {
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      onSave()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      onCancel()
+    }
+  }
+
   return (
-    <div className="grid grid-cols-[1fr_1fr_6rem_auto_auto] items-end gap-3 py-3 sm:gap-4">
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="ct-label" className="kicker">
-          Label
-        </Label>
-        <Input
-          id="ct-label"
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          autoFocus
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              onSave()
-            } else if (e.key === 'Escape') {
-              e.preventDefault()
-              onCancel()
-            }
-          }}
-        />
+    <div className="flex flex-wrap items-end gap-3 py-3 sm:gap-4">
+      <div className="grid flex-1 grid-cols-[1fr_1fr_6rem] items-end gap-3 sm:gap-4">
+        <FieldWrap htmlFor="ct-label" label="Label">
+          <Input
+            id="ct-label"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            autoFocus
+            onKeyDown={onKeyDown}
+          />
+        </FieldWrap>
+        <FieldWrap htmlFor="ct-code" label="Code">
+          <Input
+            id="ct-code"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="auto from label"
+            className="font-mono text-xs"
+            onKeyDown={onKeyDown}
+          />
+        </FieldWrap>
+        <FieldWrap htmlFor="ct-sort" label="Sort">
+          <Input
+            id="ct-sort"
+            type="number"
+            value={sortOrder}
+            onChange={(e) => setSortOrder(Number(e.target.value))}
+            className="font-mono tabular-nums"
+            onKeyDown={onKeyDown}
+          />
+        </FieldWrap>
       </div>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="ct-code" className="kicker">
-          Code
-        </Label>
-        <Input
-          id="ct-code"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          placeholder="auto from label"
-          className="font-mono text-xs"
-        />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="ct-sort" className="kicker">
-          Sort
-        </Label>
-        <Input
-          id="ct-sort"
-          type="number"
-          value={sortOrder}
-          onChange={(e) => setSortOrder(Number(e.target.value))}
-          className="font-mono tabular-nums"
-        />
-      </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onCancel}
-        disabled={saving}
-      >
-        Cancel
-      </Button>
-      <Button
-        variant="safelight"
-        size="sm"
-        onClick={onSave}
-        disabled={saving || !label.trim()}
-      >
-        <Check aria-hidden className="size-3.5" />
-        <span>{submitLabel}</span>
-      </Button>
+      <LookupFormActions
+        saving={saving}
+        onCancel={onCancel}
+        onSave={onSave}
+        submitLabel={submitLabel}
+        canSubmit={!!label.trim()}
+      />
     </div>
   )
 }

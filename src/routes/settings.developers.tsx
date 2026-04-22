@@ -20,29 +20,27 @@ import {
   useLookupAdmin,
 } from '#/components/lookup'
 import {
-  paperBases,
-  paperContrasts,
-  paperTones,
+  developerApplies,
+  developerForms,
+  type DeveloperApplies,
+  type DeveloperForm,
+  type DeveloperWithManufacturer,
   type Manufacturer,
-  type PaperBase,
-  type PaperContrast,
-  type PaperStockWithManufacturer,
-  type PaperTone,
 } from '#/db/schema'
 import { cn } from '#/lib/utils'
-import { listManufacturers } from '#/server/manufacturers'
 import {
-  archivePaperStock,
-  createPaperStock,
-  listAllPaperStocks,
-  unarchivePaperStock,
-  updatePaperStock,
-} from '#/server/paperStocks'
+  archiveDeveloper,
+  createDeveloper,
+  listAllDevelopers,
+  unarchiveDeveloper,
+  updateDeveloper,
+} from '#/server/developers'
+import { listManufacturers } from '#/server/manufacturers'
 
-export const Route = createFileRoute('/settings/paper-stocks')({
-  component: PaperStocksAdmin,
+export const Route = createFileRoute('/settings/developers')({
+  component: DevelopersAdmin,
   loader: async () => ({
-    stocks: await listAllPaperStocks(),
+    developers: await listAllDevelopers(),
     manufacturers: await listManufacturers(),
   }),
 })
@@ -56,39 +54,28 @@ const fade = {
   },
 }
 
-const baseLabels: Record<PaperBase, string> = {
-  rc: 'RC',
-  fb: 'FB',
+const appliesLabels: Record<DeveloperApplies, string> = {
+  film: 'Film',
+  paper: 'Paper',
+  both: 'Film + Paper',
 }
 
-const toneLabels: Record<PaperTone, string> = {
-  neutral: 'Neutral',
-  warm: 'Warm',
-  cool: 'Cool',
+const formLabels: Record<DeveloperForm, string> = {
+  liquid: 'Liquid',
+  powder: 'Powder',
+  monobath: 'Monobath',
 }
 
-const contrastLabels: Record<PaperContrast, string> = {
-  variable: 'Variable',
-  graded: 'Graded',
-}
-
-function contrastDisplay(stock: PaperStockWithManufacturer): string {
-  if (stock.contrast === 'graded') {
-    return stock.grade !== null ? `Graded ${stock.grade}` : 'Graded'
-  }
-  return 'Variable'
-}
-
-function PaperStocksAdmin() {
-  const { stocks, manufacturers } = Route.useLoaderData()
+function DevelopersAdmin() {
+  const { developers, manufacturers } = Route.useLoaderData()
   const admin = useLookupAdmin({
-    rows: stocks,
-    matchesQuery: (s, q) =>
-      s.label.toLowerCase().includes(q) ||
-      s.code.toLowerCase().includes(q) ||
-      s.manufacturer.label.toLowerCase().includes(q),
-    archiveFn: archivePaperStock,
-    unarchiveFn: unarchivePaperStock,
+    rows: developers,
+    matchesQuery: (d, q) =>
+      d.label.toLowerCase().includes(q) ||
+      d.code.toLowerCase().includes(q) ||
+      d.manufacturer.label.toLowerCase().includes(q),
+    archiveFn: archiveDeveloper,
+    unarchiveFn: unarchiveDeveloper,
   })
 
   const canCreate = manufacturers.length > 0
@@ -96,9 +83,9 @@ function PaperStocksAdmin() {
   return (
     <motion.div initial="hidden" animate="visible" variants={fade}>
       <LookupHeader
-        title="Paper stocks"
-        description="Darkroom papers. Each stock lives under one manufacturer and records its base, tone, and whether it's variable-contrast or graded."
-        addLabel="Add paper"
+        title="Developers"
+        description="Chemistry for developing film and paper. Each developer records whether it's for film, paper, or both, and its physical form."
+        addLabel="Add developer"
         onAdd={admin.startCreating}
         addDisabled={admin.creating || admin.busy || !canCreate}
       />
@@ -106,7 +93,7 @@ function PaperStocksAdmin() {
       {!canCreate ? (
         <p className="text-ink-soft mb-4 text-sm">
           Add at least one manufacturer in the Manufacturers tab before
-          creating a paper stock.
+          creating a developer.
         </p>
       ) : null}
 
@@ -119,44 +106,44 @@ function PaperStocksAdmin() {
       <LookupSearch
         value={admin.query}
         onChange={admin.setQuery}
-        placeholder="Find a paper…"
-        total={stocks.length}
+        placeholder="Find a developer…"
+        total={developers.length}
         filtered={admin.filtered.length}
       />
 
       <LookupList
         rows={admin.filtered}
-        totalRows={stocks.length}
+        totalRows={developers.length}
         query={admin.query}
         onClearQuery={admin.clearQuery}
         creating={admin.creating}
         editingId={admin.editingId}
-        emptyMessage="No paper stocks defined yet."
+        emptyMessage="No developers defined yet."
         renderNewRow={() => (
           <NewRow
             manufacturers={manufacturers}
-            existingOrders={stocks.map((s) => s.sortOrder)}
+            existingOrders={developers.map((d) => d.sortOrder)}
             onCancel={admin.cancelCreating}
             onSaved={admin.reloadAfterSave}
             onError={admin.setError}
           />
         )}
-        renderEditRow={(s) => (
+        renderEditRow={(d) => (
           <EditRow
-            stock={s}
+            developer={d}
             manufacturers={manufacturers}
             onCancel={admin.cancelEditing}
             onSaved={admin.reloadAfterSave}
             onError={admin.setError}
           />
         )}
-        renderDisplayRow={(s) => (
+        renderDisplayRow={(d) => (
           <DisplayRow
-            stock={s}
+            developer={d}
             busy={admin.busy}
-            onEdit={() => admin.startEditing(s.id)}
-            onArchive={() => admin.handleArchive(s.id)}
-            onUnarchive={() => admin.handleUnarchive(s.id)}
+            onEdit={() => admin.startEditing(d.id)}
+            onArchive={() => admin.handleArchive(d.id)}
+            onUnarchive={() => admin.handleUnarchive(d.id)}
           />
         )}
       />
@@ -165,57 +152,53 @@ function PaperStocksAdmin() {
 }
 
 function DisplayRow({
-  stock,
+  developer,
   busy,
   onEdit,
   onArchive,
   onUnarchive,
 }: {
-  stock: PaperStockWithManufacturer
+  developer: DeveloperWithManufacturer
   busy: boolean
   onEdit: () => void
   onArchive: () => void
   onUnarchive: () => void
 }) {
-  const archived = stock.archivedAt !== null
+  const archived = developer.archivedAt !== null
   return (
     <div
       className={cn(
-        'grid grid-cols-[1fr_3.5rem_5rem_6rem_2.5rem_auto_auto] items-center gap-3 py-3.5 sm:gap-5',
+        'grid grid-cols-[1fr_7rem_5.5rem_2.5rem_auto_auto] items-center gap-3 py-3.5 sm:gap-5',
         archived && 'opacity-55',
       )}
     >
       <div className="min-w-0">
-        <p className="text-ink truncate text-sm font-medium">{stock.label}</p>
+        <p className="text-ink truncate text-sm font-medium">
+          {developer.label}
+        </p>
         <p className="text-ink-muted truncate text-xs">
-          <span>{stock.manufacturer.label}</span>
+          <span>{developer.manufacturer.label}</span>
           <span className="mx-1.5">·</span>
-          <span className="font-mono tabular-nums">{stock.code}</span>
+          <span className="font-mono tabular-nums">{developer.code}</span>
         </p>
       </div>
       <Badge
         variant="outline"
         className="text-ink-soft font-normal normal-case tracking-normal"
       >
-        {baseLabels[stock.base]}
+        {appliesLabels[developer.appliesTo]}
       </Badge>
       <Badge
         variant="outline"
         className="text-ink-soft font-normal normal-case tracking-normal"
       >
-        {toneLabels[stock.tone]}
-      </Badge>
-      <Badge
-        variant="outline"
-        className="text-ink-soft font-normal normal-case tracking-normal"
-      >
-        {contrastDisplay(stock)}
+        {formLabels[developer.form]}
       </Badge>
       <span className="text-ink-muted text-right font-mono text-xs tabular-nums">
-        {stock.sortOrder}
+        {developer.sortOrder}
       </span>
       <LookupRowActions
-        label={stock.label}
+        label={developer.label}
         archived={archived}
         busy={busy}
         onEdit={onEdit}
@@ -230,10 +213,8 @@ type FormState = {
   label: string
   code: string
   manufacturerId: number | null
-  base: PaperBase
-  tone: PaperTone
-  contrast: PaperContrast
-  grade: number
+  appliesTo: DeveloperApplies
+  form: DeveloperForm
   sortOrder: number
 }
 
@@ -256,10 +237,8 @@ function NewRow({
     label: '',
     code: '',
     manufacturerId: manufacturers[0]?.id ?? null,
-    base: 'rc',
-    tone: 'neutral',
-    contrast: 'variable',
-    grade: 2,
+    appliesTo: 'film',
+    form: 'liquid',
     sortOrder: nextOrder,
   })
   const [saving, setSaving] = useState(false)
@@ -268,21 +247,21 @@ function NewRow({
     if (!state.label.trim() || state.manufacturerId === null) return
     setSaving(true)
     try {
-      await createPaperStock({
+      await createDeveloper({
         data: {
           label: state.label,
           code: state.code.trim() || undefined,
           manufacturerId: state.manufacturerId,
-          base: state.base,
-          tone: state.tone,
-          contrast: state.contrast,
-          grade: state.contrast === 'graded' ? state.grade : null,
+          appliesTo: state.appliesTo,
+          form: state.form,
           sortOrder: state.sortOrder,
         },
       })
       await onSaved()
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Could not create paper.')
+      onError(
+        err instanceof Error ? err.message : 'Could not create developer.',
+      )
     } finally {
       setSaving(false)
     }
@@ -302,27 +281,25 @@ function NewRow({
 }
 
 function EditRow({
-  stock,
+  developer,
   manufacturers,
   onCancel,
   onSaved,
   onError,
 }: {
-  stock: PaperStockWithManufacturer
+  developer: DeveloperWithManufacturer
   manufacturers: Manufacturer[]
   onCancel: () => void
   onSaved: () => void | Promise<void>
   onError: (msg: string) => void
 }) {
   const [state, setState] = useState<FormState>({
-    label: stock.label,
-    code: stock.code,
-    manufacturerId: stock.manufacturerId,
-    base: stock.base,
-    tone: stock.tone,
-    contrast: stock.contrast,
-    grade: stock.grade ?? 2,
-    sortOrder: stock.sortOrder,
+    label: developer.label,
+    code: developer.code,
+    manufacturerId: developer.manufacturerId,
+    appliesTo: developer.appliesTo,
+    form: developer.form,
+    sortOrder: developer.sortOrder,
   })
   const [saving, setSaving] = useState(false)
 
@@ -330,22 +307,20 @@ function EditRow({
     if (!state.label.trim() || state.manufacturerId === null) return
     setSaving(true)
     try {
-      await updatePaperStock({
+      await updateDeveloper({
         data: {
-          id: stock.id,
+          id: developer.id,
           label: state.label,
           code: state.code,
           manufacturerId: state.manufacturerId,
-          base: state.base,
-          tone: state.tone,
-          contrast: state.contrast,
-          grade: state.contrast === 'graded' ? state.grade : null,
+          appliesTo: state.appliesTo,
+          form: state.form,
           sortOrder: state.sortOrder,
         },
       })
       await onSaved()
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Could not save paper.')
+      onError(err instanceof Error ? err.message : 'Could not save developer.')
     } finally {
       setSaving(false)
     }
@@ -394,17 +369,15 @@ function FormRow({
     }
   }
 
-  const isGraded = state.contrast === 'graded'
-
   return (
     <div className="flex flex-col gap-3 py-3">
       <div className="grid grid-cols-[9rem_1fr_10rem] items-end gap-3 sm:gap-4">
-        <FieldWrap htmlFor="ps-mfg" label="Manufacturer">
+        <FieldWrap htmlFor="dev-mfg" label="Manufacturer">
           <Select
             value={state.manufacturerId ? String(state.manufacturerId) : ''}
             onValueChange={(v) => update('manufacturerId', Number(v))}
           >
-            <SelectTrigger id="ps-mfg" className="w-full">
+            <SelectTrigger id="dev-mfg" className="w-full">
               <SelectValue placeholder="Pick one" />
             </SelectTrigger>
             <SelectContent>
@@ -416,18 +389,18 @@ function FormRow({
             </SelectContent>
           </Select>
         </FieldWrap>
-        <FieldWrap htmlFor="ps-label" label="Label">
+        <FieldWrap htmlFor="dev-label" label="Label">
           <Input
-            id="ps-label"
+            id="dev-label"
             value={state.label}
             onChange={(e) => update('label', e.target.value)}
             autoFocus
             onKeyDown={onKeyDown}
           />
         </FieldWrap>
-        <FieldWrap htmlFor="ps-code" label="Code">
+        <FieldWrap htmlFor="dev-code" label="Code">
           <Input
-            id="ps-code"
+            id="dev-code"
             value={state.code}
             onChange={(e) => update('code', e.target.value)}
             placeholder="auto from label"
@@ -437,75 +410,44 @@ function FormRow({
         </FieldWrap>
       </div>
       <div className="flex flex-wrap items-end gap-3 sm:gap-4">
-        <div className="grid grid-cols-[5rem_6.5rem_7rem_5rem_5rem] items-end gap-3 sm:gap-4">
-          <FieldWrap htmlFor="ps-base" label="Base">
+        <div className="grid grid-cols-[8rem_7rem_5rem] items-end gap-3 sm:gap-4">
+          <FieldWrap htmlFor="dev-applies" label="Applies to">
             <Select
-              value={state.base}
-              onValueChange={(v) => update('base', v as PaperBase)}
+              value={state.appliesTo}
+              onValueChange={(v) => update('appliesTo', v as DeveloperApplies)}
             >
-              <SelectTrigger id="ps-base" className="w-full">
+              <SelectTrigger id="dev-applies" className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {paperBases.map((b) => (
-                  <SelectItem key={b} value={b}>
-                    {baseLabels[b]}
+                {developerApplies.map((a) => (
+                  <SelectItem key={a} value={a}>
+                    {appliesLabels[a]}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </FieldWrap>
-          <FieldWrap htmlFor="ps-tone" label="Tone">
+          <FieldWrap htmlFor="dev-form" label="Form">
             <Select
-              value={state.tone}
-              onValueChange={(v) => update('tone', v as PaperTone)}
+              value={state.form}
+              onValueChange={(v) => update('form', v as DeveloperForm)}
             >
-              <SelectTrigger id="ps-tone" className="w-full">
+              <SelectTrigger id="dev-form" className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {paperTones.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {toneLabels[t]}
+                {developerForms.map((f) => (
+                  <SelectItem key={f} value={f}>
+                    {formLabels[f]}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </FieldWrap>
-          <FieldWrap htmlFor="ps-contrast" label="Contrast">
-            <Select
-              value={state.contrast}
-              onValueChange={(v) => update('contrast', v as PaperContrast)}
-            >
-              <SelectTrigger id="ps-contrast" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {paperContrasts.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {contrastLabels[c]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </FieldWrap>
-          <FieldWrap htmlFor="ps-grade" label="Grade">
+          <FieldWrap htmlFor="dev-sort" label="Sort">
             <Input
-              id="ps-grade"
-              type="number"
-              min={0}
-              max={5}
-              step={1}
-              value={state.grade}
-              onChange={(e) => update('grade', Number(e.target.value))}
-              className="font-mono tabular-nums"
-              disabled={!isGraded}
-              onKeyDown={onKeyDown}
-            />
-          </FieldWrap>
-          <FieldWrap htmlFor="ps-sort" label="Sort">
-            <Input
-              id="ps-sort"
+              id="dev-sort"
               type="number"
               value={state.sortOrder}
               onChange={(e) => update('sortOrder', Number(e.target.value))}

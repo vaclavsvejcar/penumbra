@@ -21,6 +21,7 @@ import { Route as CustomersIndexRouteImport } from './routes/customers.index'
 import { Route as SettingsPaperStocksRouteImport } from './routes/settings.paper-stocks'
 import { Route as SettingsManufacturersRouteImport } from './routes/settings.manufacturers'
 import { Route as SettingsFilmStocksRouteImport } from './routes/settings.film-stocks'
+import { Route as SettingsDevelopersRouteImport } from './routes/settings.developers'
 import { Route as SettingsCustomerTypesRouteImport } from './routes/settings.customer-types'
 import { Route as CustomersIdRouteImport } from './routes/customers.$id'
 import { Route as CustomersIdIndexRouteImport } from './routes/customers.$id.index'
@@ -87,6 +88,11 @@ const SettingsFilmStocksRoute = SettingsFilmStocksRouteImport.update({
   path: '/film-stocks',
   getParentRoute: () => SettingsRoute,
 } as any)
+const SettingsDevelopersRoute = SettingsDevelopersRouteImport.update({
+  id: '/developers',
+  path: '/developers',
+  getParentRoute: () => SettingsRoute,
+} as any)
 const SettingsCustomerTypesRoute = SettingsCustomerTypesRouteImport.update({
   id: '/customer-types',
   path: '/customer-types',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRouteWithChildren
   '/customers/$id': typeof CustomersIdRouteWithChildren
   '/settings/customer-types': typeof SettingsCustomerTypesRoute
+  '/settings/developers': typeof SettingsDevelopersRoute
   '/settings/film-stocks': typeof SettingsFilmStocksRoute
   '/settings/manufacturers': typeof SettingsManufacturersRoute
   '/settings/paper-stocks': typeof SettingsPaperStocksRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/orders': typeof OrdersRoute
   '/prints': typeof PrintsRoute
   '/settings/customer-types': typeof SettingsCustomerTypesRoute
+  '/settings/developers': typeof SettingsDevelopersRoute
   '/settings/film-stocks': typeof SettingsFilmStocksRoute
   '/settings/manufacturers': typeof SettingsManufacturersRoute
   '/settings/paper-stocks': typeof SettingsPaperStocksRoute
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRouteWithChildren
   '/customers/$id': typeof CustomersIdRouteWithChildren
   '/settings/customer-types': typeof SettingsCustomerTypesRoute
+  '/settings/developers': typeof SettingsDevelopersRoute
   '/settings/film-stocks': typeof SettingsFilmStocksRoute
   '/settings/manufacturers': typeof SettingsManufacturersRoute
   '/settings/paper-stocks': typeof SettingsPaperStocksRoute
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/customers/$id'
     | '/settings/customer-types'
+    | '/settings/developers'
     | '/settings/film-stocks'
     | '/settings/manufacturers'
     | '/settings/paper-stocks'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/prints'
     | '/settings/customer-types'
+    | '/settings/developers'
     | '/settings/film-stocks'
     | '/settings/manufacturers'
     | '/settings/paper-stocks'
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/customers/$id'
     | '/settings/customer-types'
+    | '/settings/developers'
     | '/settings/film-stocks'
     | '/settings/manufacturers'
     | '/settings/paper-stocks'
@@ -321,6 +333,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsFilmStocksRouteImport
       parentRoute: typeof SettingsRoute
     }
+    '/settings/developers': {
+      id: '/settings/developers'
+      path: '/developers'
+      fullPath: '/settings/developers'
+      preLoaderRoute: typeof SettingsDevelopersRouteImport
+      parentRoute: typeof SettingsRoute
+    }
     '/settings/customer-types': {
       id: '/settings/customer-types'
       path: '/customer-types'
@@ -391,6 +410,7 @@ const CustomersRouteWithChildren = CustomersRoute._addFileChildren(
 
 interface SettingsRouteChildren {
   SettingsCustomerTypesRoute: typeof SettingsCustomerTypesRoute
+  SettingsDevelopersRoute: typeof SettingsDevelopersRoute
   SettingsFilmStocksRoute: typeof SettingsFilmStocksRoute
   SettingsManufacturersRoute: typeof SettingsManufacturersRoute
   SettingsPaperStocksRoute: typeof SettingsPaperStocksRoute
@@ -399,6 +419,7 @@ interface SettingsRouteChildren {
 
 const SettingsRouteChildren: SettingsRouteChildren = {
   SettingsCustomerTypesRoute: SettingsCustomerTypesRoute,
+  SettingsDevelopersRoute: SettingsDevelopersRoute,
   SettingsFilmStocksRoute: SettingsFilmStocksRoute,
   SettingsManufacturersRoute: SettingsManufacturersRoute,
   SettingsPaperStocksRoute: SettingsPaperStocksRoute,

@@ -21,6 +21,7 @@ type Category = {
     | '/settings/manufacturers'
     | '/settings/film-stocks'
     | '/settings/paper-stocks'
+    | '/settings/developers'
   kicker: string
   title: string
   description: string
@@ -54,6 +55,13 @@ const categories: Category[] = [
     title: 'Paper stocks',
     description:
       'Darkroom papers — base, tone, and whether they’re variable-contrast or graded.',
+  },
+  {
+    to: '/settings/developers',
+    kicker: 'Lookup',
+    title: 'Developers',
+    description:
+      'Chemistry for film and paper. Includes universal and monobath developers.',
   },
 ]
 

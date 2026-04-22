@@ -140,6 +140,48 @@ export type PaperStockWithManufacturer = PaperStock & {
   manufacturer: Pick<Manufacturer, 'id' | 'code' | 'label'>
 }
 
+export const developerApplies = ['film', 'paper', 'both'] as const
+export type DeveloperApplies = (typeof developerApplies)[number]
+
+export const developerForms = ['liquid', 'powder', 'monobath'] as const
+export type DeveloperForm = (typeof developerForms)[number]
+
+export const developers = sqliteTable(
+  'developers',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    code: text('code').notNull(),
+    label: text('label').notNull(),
+    manufacturerId: integer('manufacturer_id')
+      .notNull()
+      .references(() => manufacturers.id, { onDelete: 'restrict' }),
+    appliesTo: text('applies_to', { enum: developerApplies }).notNull(),
+    form: text('form', { enum: developerForms }).notNull(),
+    sortOrder: integer('sort_order').notNull().default(0),
+    archivedAt: integer('archived_at', { mode: 'timestamp' }),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    updatedAt: integer('updated_at', { mode: 'timestamp' })
+      .notNull()
+      .default(sql`(unixepoch())`)
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    uniqueIndex('developers_manufacturer_code_unique').on(
+      t.manufacturerId,
+      t.code,
+    ),
+  ],
+)
+
+export type Developer = typeof developers.$inferSelect
+export type NewDeveloper = typeof developers.$inferInsert
+
+export type DeveloperWithManufacturer = Developer & {
+  manufacturer: Pick<Manufacturer, 'id' | 'code' | 'label'>
+}
+
 export const customers = sqliteTable('customers', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),

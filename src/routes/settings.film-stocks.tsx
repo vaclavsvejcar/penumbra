@@ -1,12 +1,8 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { motion } from 'motion/react'
-import { Archive, Check, Pencil, Plus, RotateCcw } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Badge } from '#/components/ui/badge'
-import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
-import { Label } from '#/components/ui/label'
-import { LookupSearch } from '#/components/LookupSearch'
 import {
   Select,
   SelectContent,
@@ -14,6 +10,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select'
+import {
+  FieldWrap,
+  LookupFormActions,
+  LookupHeader,
+  LookupList,
+  LookupRowActions,
+  LookupSearch,
+  useLookupAdmin,
+} from '#/components/lookup'
 import {
   filmProcesses,
   filmTypes,
@@ -40,7 +45,7 @@ export const Route = createFileRoute('/settings/film-stocks')({
   }),
 })
 
-const item = {
+const fade = {
   hidden: { opacity: 0, y: 6 },
   visible: {
     opacity: 1,
@@ -64,81 +69,27 @@ const processLabels: Record<FilmProcess, string> = {
 
 function FilmStocksAdmin() {
   const { stocks, manufacturers } = Route.useLoaderData()
-  const router = useRouter()
-  const [creating, setCreating] = useState(false)
-  const [editingId, setEditingId] = useState<number | null>(null)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (q) {
-      return stocks.filter(
-        (s) =>
-          s.label.toLowerCase().includes(q) ||
-          s.code.toLowerCase().includes(q) ||
-          s.manufacturer.label.toLowerCase().includes(q),
-      )
-    }
-    return stocks.filter((s) => s.archivedAt === null)
-  }, [stocks, query])
-
-  async function handleArchive(id: number) {
-    setBusy(true)
-    setError(null)
-    try {
-      await archiveFilmStock({ data: id })
-      await router.invalidate()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Archive failed.')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function handleUnarchive(id: number) {
-    setBusy(true)
-    setError(null)
-    try {
-      await unarchiveFilmStock({ data: id })
-      await router.invalidate()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Restore failed.')
-    } finally {
-      setBusy(false)
-    }
-  }
+  const admin = useLookupAdmin({
+    rows: stocks,
+    matchesQuery: (s, q) =>
+      s.label.toLowerCase().includes(q) ||
+      s.code.toLowerCase().includes(q) ||
+      s.manufacturer.label.toLowerCase().includes(q),
+    archiveFn: archiveFilmStock,
+    unarchiveFn: unarchiveFilmStock,
+  })
 
   const canCreate = manufacturers.length > 0
 
   return (
-    <motion.div initial="hidden" animate="visible" variants={item}>
-      <div className="mb-6 flex items-end justify-between gap-4">
-        <div>
-          <p className="kicker mb-1.5">Lookup</p>
-          <h2 className="font-serif text-ink text-2xl leading-tight italic">
-            Film stocks
-          </h2>
-          <p className="text-ink-soft mt-2 max-w-xl text-sm leading-relaxed">
-            The emulsions you shoot. Each stock lives under one manufacturer
-            and carries its box speed and intended process.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setCreating(true)
-            setEditingId(null)
-          }}
-          disabled={creating || busy || !canCreate}
-          className="shrink-0"
-        >
-          <Plus aria-hidden className="size-4" />
-          Add stock
-        </Button>
-      </div>
+    <motion.div initial="hidden" animate="visible" variants={fade}>
+      <LookupHeader
+        title="Film stocks"
+        description="The emulsions you shoot. Each stock lives under one manufacturer and carries its box speed and intended process."
+        addLabel="Add stock"
+        onAdd={admin.startCreating}
+        addDisabled={admin.creating || admin.busy || !canCreate}
+      />
 
       {!canCreate ? (
         <p className="text-ink-soft mb-4 text-sm">
@@ -147,91 +98,56 @@ function FilmStocksAdmin() {
         </p>
       ) : null}
 
-      {error ? (
+      {admin.error ? (
         <p className="text-destructive mb-4 text-sm" role="alert">
-          {error}
+          {admin.error}
         </p>
       ) : null}
 
       <LookupSearch
-        value={query}
-        onChange={setQuery}
+        value={admin.query}
+        onChange={admin.setQuery}
         placeholder="Find a stock…"
         total={stocks.length}
-        filtered={filtered.length}
+        filtered={admin.filtered.length}
       />
 
-      <ul>
-        {creating ? (
-          <li className="border-hairline bg-muted/20 border-b">
-            <NewRow
-              manufacturers={manufacturers}
-              existingOrders={stocks.map((s) => s.sortOrder)}
-              onCancel={() => setCreating(false)}
-              onSaved={async () => {
-                setCreating(false)
-                await router.invalidate()
-              }}
-              onError={setError}
-            />
-          </li>
-        ) : null}
-        {stocks.length === 0 && !creating ? (
-          <li className="border-hairline border-b py-12 text-center">
-            <p className="kicker text-ink-muted mb-1">Empty list</p>
-            <p className="text-ink-soft font-serif italic">
-              No film stocks defined yet.
-            </p>
-          </li>
-        ) : filtered.length === 0 && !creating ? (
-          <li className="border-hairline border-b py-12 text-center">
-            <p className="kicker text-ink-muted mb-1">No matches</p>
-            <p className="text-ink-soft font-serif italic">
-              Nothing found for “{query.trim()}”.
-            </p>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setQuery('')}
-              className="mt-3"
-            >
-              Clear search
-            </Button>
-          </li>
-        ) : null}
-        {filtered.map((s) =>
-          editingId === s.id ? (
-            <li
-              key={s.id}
-              className="border-hairline bg-muted/20 border-b"
-            >
-              <EditRow
-                stock={s}
-                manufacturers={manufacturers}
-                onCancel={() => setEditingId(null)}
-                onSaved={async () => {
-                  setEditingId(null)
-                  await router.invalidate()
-                }}
-                onError={setError}
-              />
-            </li>
-          ) : (
-            <li key={s.id} className="border-hairline border-b">
-              <DisplayRow
-                stock={s}
-                busy={busy}
-                onEdit={() => {
-                  setEditingId(s.id)
-                  setCreating(false)
-                }}
-                onArchive={() => handleArchive(s.id)}
-                onUnarchive={() => handleUnarchive(s.id)}
-              />
-            </li>
-          ),
+      <LookupList
+        rows={admin.filtered}
+        totalRows={stocks.length}
+        query={admin.query}
+        onClearQuery={admin.clearQuery}
+        creating={admin.creating}
+        editingId={admin.editingId}
+        emptyMessage="No film stocks defined yet."
+        renderNewRow={() => (
+          <NewRow
+            manufacturers={manufacturers}
+            existingOrders={stocks.map((s) => s.sortOrder)}
+            onCancel={admin.cancelCreating}
+            onSaved={admin.reloadAfterSave}
+            onError={admin.setError}
+          />
         )}
-      </ul>
+        renderEditRow={(s) => (
+          <EditRow
+            stock={s}
+            manufacturers={manufacturers}
+            onCancel={admin.cancelEditing}
+            onSaved={admin.reloadAfterSave}
+            onError={admin.setError}
+          />
+        )}
+        renderDisplayRow={(s) => (
+          <DisplayRow
+            stock={s}
+            busy={admin.busy}
+            onEdit={() => admin.startEditing(s.id)}
+            onArchive={() => admin.handleArchive(s.id)}
+            onUnarchive={() => admin.handleUnarchive(s.id)}
+          />
+        )}
+      />
     </motion.div>
   )
 }
@@ -283,36 +199,14 @@ function DisplayRow({
       <span className="text-ink-muted text-right font-mono text-xs tabular-nums">
         {stock.sortOrder}
       </span>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onEdit}
-        disabled={busy}
-        aria-label={`Edit ${stock.label}`}
-      >
-        <Pencil aria-hidden className="size-3.5" />
-      </Button>
-      {archived ? (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onUnarchive}
-          disabled={busy}
-          aria-label={`Restore ${stock.label}`}
-        >
-          <RotateCcw aria-hidden className="size-3.5" />
-        </Button>
-      ) : (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onArchive}
-          disabled={busy}
-          aria-label={`Archive ${stock.label}`}
-        >
-          <Archive aria-hidden className="size-3.5" />
-        </Button>
-      )}
+      <LookupRowActions
+        label={stock.label}
+        archived={archived}
+        busy={busy}
+        onEdit={onEdit}
+        onArchive={onArchive}
+        onUnarchive={onUnarchive}
+      />
     </div>
   )
 }
@@ -577,47 +471,14 @@ function FormRow({
             />
           </FieldWrap>
         </div>
-        <div className="ml-auto flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onCancel}
-            disabled={saving}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="safelight"
-            size="sm"
-            onClick={onSave}
-            disabled={
-              saving || !state.label.trim() || state.manufacturerId === null
-            }
-          >
-            <Check aria-hidden className="size-3.5" />
-            <span>{submitLabel}</span>
-          </Button>
-        </div>
+        <LookupFormActions
+          saving={saving}
+          onCancel={onCancel}
+          onSave={onSave}
+          submitLabel={submitLabel}
+          canSubmit={!!state.label.trim() && state.manufacturerId !== null}
+        />
       </div>
-    </div>
-  )
-}
-
-function FieldWrap({
-  htmlFor,
-  label,
-  children,
-}: {
-  htmlFor: string
-  label: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Label htmlFor={htmlFor} className="kicker">
-        {label}
-      </Label>
-      {children}
     </div>
   )
 }
