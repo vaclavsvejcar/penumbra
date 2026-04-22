@@ -16,7 +16,10 @@ const item = {
 }
 
 type Category = {
-  to: '/settings/customer-types' | '/settings/manufacturers'
+  to:
+    | '/settings/customer-types'
+    | '/settings/manufacturers'
+    | '/settings/film-stocks'
   kicker: string
   title: string
   description: string
@@ -36,6 +39,13 @@ const categories: Category[] = [
     title: 'Manufacturers',
     description:
       'Brands of film, paper, and chemistry. One shared list across the whole archive.',
+  },
+  {
+    to: '/settings/film-stocks',
+    kicker: 'Lookup',
+    title: 'Film stocks',
+    description:
+      'The emulsions you shoot, each bound to its manufacturer, with box speed and process.',
   },
 ]
 

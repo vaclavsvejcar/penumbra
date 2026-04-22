@@ -43,6 +43,13 @@
       "when": 1777363200000,
       "tag": "0005_manufacturers",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1777449600000,
+      "tag": "0006_film_stocks",
+      "breakpoints": true
     }
   ]
 }

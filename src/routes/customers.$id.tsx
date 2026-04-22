@@ -122,7 +122,7 @@ function CustomerDetailLayout() {
 
       <motion.nav
         variants={item}
-        className="border-hairline mt-12 flex gap-8 overflow-x-auto border-b whitespace-nowrap"
+        className="border-hairline mt-12 flex gap-8 overflow-x-auto overflow-y-hidden border-b whitespace-nowrap"
         aria-label="Customer sections"
       >
         {tabs.map((tab) => (

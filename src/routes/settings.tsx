@@ -26,6 +26,7 @@ const tabs = [
   { to: '/settings', label: 'Overview', exact: true },
   { to: '/settings/customer-types', label: 'Customer types', exact: false },
   { to: '/settings/manufacturers', label: 'Manufacturers', exact: false },
+  { to: '/settings/film-stocks', label: 'Film stocks', exact: false },
 ] as const
 
 function SettingsLayout() {
@@ -48,7 +49,7 @@ function SettingsLayout() {
 
       <motion.nav
         variants={item}
-        className="border-hairline mt-12 flex gap-8 overflow-x-auto border-b whitespace-nowrap"
+        className="border-hairline mt-12 flex gap-8 overflow-x-auto overflow-y-hidden border-b whitespace-nowrap"
         aria-label="Settings sections"
       >
         {tabs.map((tab) => (

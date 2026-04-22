@@ -1,11 +1,12 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { motion } from 'motion/react'
 import { Archive, Check, Pencil, Plus, RotateCcw, X } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
+import { LookupSearch } from '#/components/LookupSearch'
 import type { Manufacturer } from '#/db/schema'
 import { cn } from '#/lib/utils'
 import {
@@ -37,6 +38,19 @@ function ManufacturersAdmin() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (q) {
+      return rows.filter(
+        (r) =>
+          r.label.toLowerCase().includes(q) ||
+          r.code.toLowerCase().includes(q),
+      )
+    }
+    return rows.filter((r) => r.archivedAt === null)
+  }, [rows, query])
 
   async function handleArchive(id: number) {
     setBusy(true)
@@ -98,7 +112,15 @@ function ManufacturersAdmin() {
         </p>
       ) : null}
 
-      <ul className="border-hairline border-t">
+      <LookupSearch
+        value={query}
+        onChange={setQuery}
+        placeholder="Find a manufacturer…"
+        total={rows.length}
+        filtered={filtered.length}
+      />
+
+      <ul>
         {creating ? (
           <li className="border-hairline bg-muted/20 border-b">
             <NewRow
@@ -119,8 +141,23 @@ function ManufacturersAdmin() {
               No manufacturers defined yet.
             </p>
           </li>
+        ) : filtered.length === 0 && !creating ? (
+          <li className="border-hairline border-b py-12 text-center">
+            <p className="kicker text-ink-muted mb-1">No matches</p>
+            <p className="text-ink-soft font-serif italic">
+              Nothing found for “{query.trim()}”.
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setQuery('')}
+              className="mt-3"
+            >
+              Clear search
+            </Button>
+          </li>
         ) : null}
-        {rows.map((m) =>
+        {filtered.map((m) =>
           editingId === m.id ? (
             <li
               key={m.id}
