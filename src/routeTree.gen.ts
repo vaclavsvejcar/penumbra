@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StorageRouteImport } from './routes/storage'
 import { Route as PrintsRouteImport } from './routes/prints'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as NegativesRouteImport } from './routes/negatives'
@@ -28,6 +29,11 @@ import { Route as CustomersIdIndexRouteImport } from './routes/customers.$id.ind
 import { Route as CustomersIdOrdersRouteImport } from './routes/customers.$id.orders'
 import { Route as CustomersIdNotesRouteImport } from './routes/customers.$id.notes'
 
+const StorageRoute = StorageRouteImport.update({
+  id: '/storage',
+  path: '/storage',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrintsRoute = PrintsRouteImport.update({
   id: '/prints',
   path: '/prints',
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/negatives': typeof NegativesRoute
   '/orders': typeof OrdersRoute
   '/prints': typeof PrintsRoute
+  '/storage': typeof StorageRoute
   '/customers/$id': typeof CustomersIdRouteWithChildren
   '/lookups/customer-types': typeof LookupsCustomerTypesRoute
   '/lookups/developers': typeof LookupsDevelopersRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/negatives': typeof NegativesRoute
   '/orders': typeof OrdersRoute
   '/prints': typeof PrintsRoute
+  '/storage': typeof StorageRoute
   '/lookups/customer-types': typeof LookupsCustomerTypesRoute
   '/lookups/developers': typeof LookupsDevelopersRoute
   '/lookups/film-stocks': typeof LookupsFilmStocksRoute
@@ -165,6 +173,7 @@ export interface FileRoutesById {
   '/negatives': typeof NegativesRoute
   '/orders': typeof OrdersRoute
   '/prints': typeof PrintsRoute
+  '/storage': typeof StorageRoute
   '/customers/$id': typeof CustomersIdRouteWithChildren
   '/lookups/customer-types': typeof LookupsCustomerTypesRoute
   '/lookups/developers': typeof LookupsDevelopersRoute
@@ -187,6 +196,7 @@ export interface FileRouteTypes {
     | '/negatives'
     | '/orders'
     | '/prints'
+    | '/storage'
     | '/customers/$id'
     | '/lookups/customer-types'
     | '/lookups/developers'
@@ -205,6 +215,7 @@ export interface FileRouteTypes {
     | '/negatives'
     | '/orders'
     | '/prints'
+    | '/storage'
     | '/lookups/customer-types'
     | '/lookups/developers'
     | '/lookups/film-stocks'
@@ -224,6 +235,7 @@ export interface FileRouteTypes {
     | '/negatives'
     | '/orders'
     | '/prints'
+    | '/storage'
     | '/customers/$id'
     | '/lookups/customer-types'
     | '/lookups/developers'
@@ -245,10 +257,18 @@ export interface RootRouteChildren {
   NegativesRoute: typeof NegativesRoute
   OrdersRoute: typeof OrdersRoute
   PrintsRoute: typeof PrintsRoute
+  StorageRoute: typeof StorageRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/storage': {
+      id: '/storage'
+      path: '/storage'
+      fullPath: '/storage'
+      preLoaderRoute: typeof StorageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/prints': {
       id: '/prints'
       path: '/prints'
@@ -437,6 +457,7 @@ const rootRouteChildren: RootRouteChildren = {
   NegativesRoute: NegativesRoute,
   OrdersRoute: OrdersRoute,
   PrintsRoute: PrintsRoute,
+  StorageRoute: StorageRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

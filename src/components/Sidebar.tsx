@@ -98,6 +98,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
 
         <NavGroup label="Settings">
           <NavItem to="/lookups" label="Lookups" onNavigate={onNavigate} />
+          <NavItem to="/storage" label="Storage" onNavigate={onNavigate} />
         </NavGroup>
       </div>
 
