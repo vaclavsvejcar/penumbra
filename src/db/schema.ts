@@ -27,6 +27,24 @@ export const customerTypes = sqliteTable('customer_types', {
 export type CustomerType = typeof customerTypes.$inferSelect
 export type NewCustomerType = typeof customerTypes.$inferInsert
 
+export const manufacturers = sqliteTable('manufacturers', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  code: text('code').notNull().unique(),
+  label: text('label').notNull(),
+  sortOrder: integer('sort_order').notNull().default(0),
+  archivedAt: integer('archived_at', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' })
+    .notNull()
+    .default(sql`(unixepoch())`)
+    .$onUpdate(() => new Date()),
+})
+
+export type Manufacturer = typeof manufacturers.$inferSelect
+export type NewManufacturer = typeof manufacturers.$inferInsert
+
 export const customers = sqliteTable('customers', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),

@@ -18,6 +18,7 @@ import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings.index'
 import { Route as CustomersIndexRouteImport } from './routes/customers.index'
+import { Route as SettingsManufacturersRouteImport } from './routes/settings.manufacturers'
 import { Route as SettingsCustomerTypesRouteImport } from './routes/settings.customer-types'
 import { Route as CustomersIdRouteImport } from './routes/customers.$id'
 import { Route as CustomersIdIndexRouteImport } from './routes/customers.$id.index'
@@ -69,6 +70,11 @@ const CustomersIndexRoute = CustomersIndexRouteImport.update({
   path: '/',
   getParentRoute: () => CustomersRoute,
 } as any)
+const SettingsManufacturersRoute = SettingsManufacturersRouteImport.update({
+  id: '/manufacturers',
+  path: '/manufacturers',
+  getParentRoute: () => SettingsRoute,
+} as any)
 const SettingsCustomerTypesRoute = SettingsCustomerTypesRouteImport.update({
   id: '/customer-types',
   path: '/customer-types',
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRouteWithChildren
   '/customers/$id': typeof CustomersIdRouteWithChildren
   '/settings/customer-types': typeof SettingsCustomerTypesRoute
+  '/settings/manufacturers': typeof SettingsManufacturersRoute
   '/customers/': typeof CustomersIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/customers/$id/notes': typeof CustomersIdNotesRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/orders': typeof OrdersRoute
   '/prints': typeof PrintsRoute
   '/settings/customer-types': typeof SettingsCustomerTypesRoute
+  '/settings/manufacturers': typeof SettingsManufacturersRoute
   '/customers': typeof CustomersIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/customers/$id/notes': typeof CustomersIdNotesRoute
@@ -135,6 +143,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRouteWithChildren
   '/customers/$id': typeof CustomersIdRouteWithChildren
   '/settings/customer-types': typeof SettingsCustomerTypesRoute
+  '/settings/manufacturers': typeof SettingsManufacturersRoute
   '/customers/': typeof CustomersIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/customers/$id/notes': typeof CustomersIdNotesRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/customers/$id'
     | '/settings/customer-types'
+    | '/settings/manufacturers'
     | '/customers/'
     | '/settings/'
     | '/customers/$id/notes'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/prints'
     | '/settings/customer-types'
+    | '/settings/manufacturers'
     | '/customers'
     | '/settings'
     | '/customers/$id/notes'
@@ -182,6 +193,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/customers/$id'
     | '/settings/customer-types'
+    | '/settings/manufacturers'
     | '/customers/'
     | '/settings/'
     | '/customers/$id/notes'
@@ -264,6 +276,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomersIndexRouteImport
       parentRoute: typeof CustomersRoute
     }
+    '/settings/manufacturers': {
+      id: '/settings/manufacturers'
+      path: '/manufacturers'
+      fullPath: '/settings/manufacturers'
+      preLoaderRoute: typeof SettingsManufacturersRouteImport
+      parentRoute: typeof SettingsRoute
+    }
     '/settings/customer-types': {
       id: '/settings/customer-types'
       path: '/customer-types'
@@ -334,11 +353,13 @@ const CustomersRouteWithChildren = CustomersRoute._addFileChildren(
 
 interface SettingsRouteChildren {
   SettingsCustomerTypesRoute: typeof SettingsCustomerTypesRoute
+  SettingsManufacturersRoute: typeof SettingsManufacturersRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
 }
 
 const SettingsRouteChildren: SettingsRouteChildren = {
   SettingsCustomerTypesRoute: SettingsCustomerTypesRoute,
+  SettingsManufacturersRoute: SettingsManufacturersRoute,
   SettingsIndexRoute: SettingsIndexRoute,
 }
 

@@ -25,6 +25,7 @@ const item = {
 const tabs = [
   { to: '/settings', label: 'Overview', exact: true },
   { to: '/settings/customer-types', label: 'Customer types', exact: false },
+  { to: '/settings/manufacturers', label: 'Manufacturers', exact: false },
 ] as const
 
 function SettingsLayout() {

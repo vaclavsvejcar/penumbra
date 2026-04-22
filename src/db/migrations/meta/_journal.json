@@ -36,6 +36,13 @@
       "when": 1777276800000,
       "tag": "0004_customer_types",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1777363200000,
+      "tag": "0005_manufacturers",
+      "breakpoints": true
     }
   ]
 }

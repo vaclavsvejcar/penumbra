@@ -16,7 +16,7 @@ const item = {
 }
 
 type Category = {
-  to: '/settings/customer-types'
+  to: '/settings/customer-types' | '/settings/manufacturers'
   kicker: string
   title: string
   description: string
@@ -29,6 +29,13 @@ const categories: Category[] = [
     title: 'Customer types',
     description:
       'Manage the kinds of customers — collectors, galleries, and whatever else belongs in your ledger.',
+  },
+  {
+    to: '/settings/manufacturers',
+    kicker: 'Lookup',
+    title: 'Manufacturers',
+    description:
+      'Brands of film, paper, and chemistry. One shared list across the whole archive.',
   },
 ]
 
