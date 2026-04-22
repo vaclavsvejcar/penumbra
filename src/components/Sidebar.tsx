@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
-import { Github } from 'lucide-react'
+import { Github, Search } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
+import { useSearch } from './SearchProvider'
 import { cn } from '#/lib/utils'
 
 type NavItemProps = {
@@ -59,6 +60,13 @@ type SidebarProps = {
 }
 
 export default function Sidebar({ onNavigate }: SidebarProps) {
+  const search = useSearch()
+
+  function handleSearchClick() {
+    onNavigate?.()
+    search.open()
+  }
+
   return (
     <nav className="flex h-full w-60 shrink-0 flex-col">
       <div className="px-6 py-6">
@@ -80,6 +88,27 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
           </span>
           <span className="sr-only">penumbra</span>
         </Link>
+      </div>
+
+      <div className="px-4 pb-4">
+        <button
+          type="button"
+          onClick={handleSearchClick}
+          aria-label="Search the archive"
+          className={cn(
+            'group/search flex w-full items-center justify-between gap-2 rounded-sm',
+            'border-hairline border px-3 py-1.5 text-left',
+            'hover:border-hairline-strong transition-colors',
+          )}
+        >
+          <span className="text-ink-muted group-hover/search:text-ink-soft flex items-center gap-2 transition-colors">
+            <Search className="h-3.5 w-3.5" aria-hidden />
+            <span className="font-serif text-[0.9rem] italic">Search…</span>
+          </span>
+          <span className="text-ink-muted font-mono text-[0.65rem] tabular-nums">
+            ⌘K
+          </span>
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-3 py-2">
