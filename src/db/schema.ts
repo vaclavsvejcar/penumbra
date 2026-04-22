@@ -93,6 +93,53 @@ export type FilmStockWithManufacturer = FilmStock & {
   manufacturer: Pick<Manufacturer, 'id' | 'code' | 'label'>
 }
 
+export const paperBases = ['rc', 'fb'] as const
+export type PaperBase = (typeof paperBases)[number]
+
+export const paperTones = ['neutral', 'warm', 'cool'] as const
+export type PaperTone = (typeof paperTones)[number]
+
+export const paperContrasts = ['variable', 'graded'] as const
+export type PaperContrast = (typeof paperContrasts)[number]
+
+export const paperStocks = sqliteTable(
+  'paper_stocks',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    code: text('code').notNull(),
+    label: text('label').notNull(),
+    manufacturerId: integer('manufacturer_id')
+      .notNull()
+      .references(() => manufacturers.id, { onDelete: 'restrict' }),
+    base: text('base', { enum: paperBases }).notNull(),
+    tone: text('tone', { enum: paperTones }).notNull(),
+    contrast: text('contrast', { enum: paperContrasts }).notNull(),
+    grade: integer('grade'),
+    sortOrder: integer('sort_order').notNull().default(0),
+    archivedAt: integer('archived_at', { mode: 'timestamp' }),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    updatedAt: integer('updated_at', { mode: 'timestamp' })
+      .notNull()
+      .default(sql`(unixepoch())`)
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    uniqueIndex('paper_stocks_manufacturer_code_unique').on(
+      t.manufacturerId,
+      t.code,
+    ),
+  ],
+)
+
+export type PaperStock = typeof paperStocks.$inferSelect
+export type NewPaperStock = typeof paperStocks.$inferInsert
+
+export type PaperStockWithManufacturer = PaperStock & {
+  manufacturer: Pick<Manufacturer, 'id' | 'code' | 'label'>
+}
+
 export const customers = sqliteTable('customers', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),

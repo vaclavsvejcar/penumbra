@@ -27,6 +27,7 @@ const tabs = [
   { to: '/settings/customer-types', label: 'Customer types', exact: false },
   { to: '/settings/manufacturers', label: 'Manufacturers', exact: false },
   { to: '/settings/film-stocks', label: 'Film stocks', exact: false },
+  { to: '/settings/paper-stocks', label: 'Paper stocks', exact: false },
 ] as const
 
 function SettingsLayout() {

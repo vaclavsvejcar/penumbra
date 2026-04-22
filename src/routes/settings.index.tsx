@@ -20,6 +20,7 @@ type Category = {
     | '/settings/customer-types'
     | '/settings/manufacturers'
     | '/settings/film-stocks'
+    | '/settings/paper-stocks'
   kicker: string
   title: string
   description: string
@@ -46,6 +47,13 @@ const categories: Category[] = [
     title: 'Film stocks',
     description:
       'The emulsions you shoot, each bound to its manufacturer, with box speed and process.',
+  },
+  {
+    to: '/settings/paper-stocks',
+    kicker: 'Lookup',
+    title: 'Paper stocks',
+    description:
+      'Darkroom papers — base, tone, and whether they’re variable-contrast or graded.',
   },
 ]
 

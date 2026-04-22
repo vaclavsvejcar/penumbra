@@ -18,6 +18,7 @@ import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings.index'
 import { Route as CustomersIndexRouteImport } from './routes/customers.index'
+import { Route as SettingsPaperStocksRouteImport } from './routes/settings.paper-stocks'
 import { Route as SettingsManufacturersRouteImport } from './routes/settings.manufacturers'
 import { Route as SettingsFilmStocksRouteImport } from './routes/settings.film-stocks'
 import { Route as SettingsCustomerTypesRouteImport } from './routes/settings.customer-types'
@@ -71,6 +72,11 @@ const CustomersIndexRoute = CustomersIndexRouteImport.update({
   path: '/',
   getParentRoute: () => CustomersRoute,
 } as any)
+const SettingsPaperStocksRoute = SettingsPaperStocksRouteImport.update({
+  id: '/paper-stocks',
+  path: '/paper-stocks',
+  getParentRoute: () => SettingsRoute,
+} as any)
 const SettingsManufacturersRoute = SettingsManufacturersRouteImport.update({
   id: '/manufacturers',
   path: '/manufacturers',
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/settings/customer-types': typeof SettingsCustomerTypesRoute
   '/settings/film-stocks': typeof SettingsFilmStocksRoute
   '/settings/manufacturers': typeof SettingsManufacturersRoute
+  '/settings/paper-stocks': typeof SettingsPaperStocksRoute
   '/customers/': typeof CustomersIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/customers/$id/notes': typeof CustomersIdNotesRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/settings/customer-types': typeof SettingsCustomerTypesRoute
   '/settings/film-stocks': typeof SettingsFilmStocksRoute
   '/settings/manufacturers': typeof SettingsManufacturersRoute
+  '/settings/paper-stocks': typeof SettingsPaperStocksRoute
   '/customers': typeof CustomersIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/customers/$id/notes': typeof CustomersIdNotesRoute
@@ -153,6 +161,7 @@ export interface FileRoutesById {
   '/settings/customer-types': typeof SettingsCustomerTypesRoute
   '/settings/film-stocks': typeof SettingsFilmStocksRoute
   '/settings/manufacturers': typeof SettingsManufacturersRoute
+  '/settings/paper-stocks': typeof SettingsPaperStocksRoute
   '/customers/': typeof CustomersIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/customers/$id/notes': typeof CustomersIdNotesRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
     | '/settings/customer-types'
     | '/settings/film-stocks'
     | '/settings/manufacturers'
+    | '/settings/paper-stocks'
     | '/customers/'
     | '/settings/'
     | '/customers/$id/notes'
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/settings/customer-types'
     | '/settings/film-stocks'
     | '/settings/manufacturers'
+    | '/settings/paper-stocks'
     | '/customers'
     | '/settings'
     | '/customers/$id/notes'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/settings/customer-types'
     | '/settings/film-stocks'
     | '/settings/manufacturers'
+    | '/settings/paper-stocks'
     | '/customers/'
     | '/settings/'
     | '/customers/$id/notes'
@@ -287,6 +299,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/customers/'
       preLoaderRoute: typeof CustomersIndexRouteImport
       parentRoute: typeof CustomersRoute
+    }
+    '/settings/paper-stocks': {
+      id: '/settings/paper-stocks'
+      path: '/paper-stocks'
+      fullPath: '/settings/paper-stocks'
+      preLoaderRoute: typeof SettingsPaperStocksRouteImport
+      parentRoute: typeof SettingsRoute
     }
     '/settings/manufacturers': {
       id: '/settings/manufacturers'
@@ -374,6 +393,7 @@ interface SettingsRouteChildren {
   SettingsCustomerTypesRoute: typeof SettingsCustomerTypesRoute
   SettingsFilmStocksRoute: typeof SettingsFilmStocksRoute
   SettingsManufacturersRoute: typeof SettingsManufacturersRoute
+  SettingsPaperStocksRoute: typeof SettingsPaperStocksRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
 }
 
@@ -381,6 +401,7 @@ const SettingsRouteChildren: SettingsRouteChildren = {
   SettingsCustomerTypesRoute: SettingsCustomerTypesRoute,
   SettingsFilmStocksRoute: SettingsFilmStocksRoute,
   SettingsManufacturersRoute: SettingsManufacturersRoute,
+  SettingsPaperStocksRoute: SettingsPaperStocksRoute,
   SettingsIndexRoute: SettingsIndexRoute,
 }
 
