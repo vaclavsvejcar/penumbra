@@ -5,12 +5,16 @@ import { useState } from 'react'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { CustomerSheet } from '#/components/CustomerSheet'
-import { type Customer, type CustomerKind } from '#/db/schema'
+import type { CustomerWithType } from '#/db/schema'
 import { listCustomers } from '#/server/customers'
+import { listCustomerTypes } from '#/server/customerTypes'
 
 export const Route = createFileRoute('/customers/')({
   component: Customers,
-  loader: () => listCustomers(),
+  loader: async () => ({
+    customers: await listCustomers(),
+    customerTypes: await listCustomerTypes(),
+  }),
 })
 
 const container = {
@@ -29,11 +33,6 @@ const item = {
   },
 }
 
-const kindLabel: Record<CustomerKind, string> = {
-  collector: 'Collector',
-  gallery: 'Gallery',
-}
-
 const dateFmt = new Intl.DateTimeFormat('en-GB', {
   day: '2-digit',
   month: 'short',
@@ -41,7 +40,7 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
 })
 
 function Customers() {
-  const customers = Route.useLoaderData()
+  const { customers, customerTypes } = Route.useLoaderData()
   const [open, setOpen] = useState(false)
 
   return (
@@ -83,7 +82,11 @@ function Customers() {
         )}
       </motion.div>
 
-      <CustomerSheet open={open} onOpenChange={setOpen} />
+      <CustomerSheet
+        open={open}
+        onOpenChange={setOpen}
+        customerTypes={customerTypes}
+      />
     </motion.section>
   )
 }
@@ -99,7 +102,7 @@ function EmptyState() {
   )
 }
 
-function CustomerList({ rows }: { rows: Customer[] }) {
+function CustomerList({ rows }: { rows: CustomerWithType[] }) {
   return (
     <ul className="border-hairline border-t">
       {rows.map((c, i) => (
@@ -119,7 +122,7 @@ function CustomerList({ rows }: { rows: Customer[] }) {
               ) : null}
             </div>
             <Badge variant="outline" className="text-ink-soft font-normal">
-              {kindLabel[c.kind]}
+              {c.customerType.label}
             </Badge>
             <span className="text-ink-soft hidden text-sm sm:inline">
               {c.city ?? '—'}

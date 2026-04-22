@@ -2,12 +2,16 @@ import { createServerFn } from '@tanstack/react-start'
 import { desc, eq } from 'drizzle-orm'
 import { isValidPhoneNumber } from 'react-phone-number-input'
 import { db } from '#/db/client'
-import { customerKinds, customers, type CustomerKind } from '#/db/schema'
+import {
+  customers,
+  customerTypes,
+  type CustomerWithType,
+} from '#/db/schema'
 import { isValidEmail } from '#/lib/validation'
 
 type CustomerFields = {
   name: string
-  kind: CustomerKind
+  customerTypeId: number
   email: string | null
   phone: string | null
   city: string | null
@@ -28,6 +32,16 @@ function parseId(value: unknown): number {
   return n
 }
 
+async function assertCustomerTypeExists(id: number) {
+  const row = await db
+    .select({ id: customerTypes.id, archivedAt: customerTypes.archivedAt })
+    .from(customerTypes)
+    .where(eq(customerTypes.id, id))
+    .get()
+  if (!row) throw new Error('Customer type not found')
+  if (row.archivedAt) throw new Error('Customer type is archived')
+}
+
 function parseCustomerPatch(raw: unknown): Partial<CustomerFields> {
   if (!raw || typeof raw !== 'object') {
     throw new Error('Invalid payload')
@@ -41,11 +55,8 @@ function parseCustomerPatch(raw: unknown): Partial<CustomerFields> {
     patch.name = name
   }
 
-  if ('kind' in input) {
-    const kindRaw = typeof input.kind === 'string' ? input.kind : 'collector'
-    patch.kind = (customerKinds as readonly string[]).includes(kindRaw)
-      ? (kindRaw as CustomerKind)
-      : 'collector'
+  if ('customerTypeId' in input) {
+    patch.customerTypeId = parseId(input.customerTypeId)
   }
 
   if ('email' in input) {
@@ -78,9 +89,12 @@ function parseCustomerPatch(raw: unknown): Partial<CustomerFields> {
 function parseCustomerFields(raw: unknown): CustomerFields {
   const patch = parseCustomerPatch(raw)
   if (patch.name === undefined) throw new Error('Name is required')
+  if (patch.customerTypeId === undefined) {
+    throw new Error('Customer type is required')
+  }
   return {
     name: patch.name,
-    kind: patch.kind ?? 'collector',
+    customerTypeId: patch.customerTypeId,
     email: patch.email ?? null,
     phone: patch.phone ?? null,
     city: patch.city ?? null,
@@ -88,26 +102,48 @@ function parseCustomerFields(raw: unknown): CustomerFields {
   }
 }
 
+function joinCustomer(row: {
+  customer: typeof customers.$inferSelect
+  customerType: typeof customerTypes.$inferSelect
+}): CustomerWithType {
+  return {
+    ...row.customer,
+    customerType: {
+      id: row.customerType.id,
+      code: row.customerType.code,
+      label: row.customerType.label,
+    },
+  }
+}
+
 export const listCustomers = createServerFn({ method: 'GET' }).handler(
-  async () => {
-    return db.select().from(customers).orderBy(desc(customers.createdAt)).all()
+  async (): Promise<CustomerWithType[]> => {
+    const rows = await db
+      .select({ customer: customers, customerType: customerTypes })
+      .from(customers)
+      .innerJoin(customerTypes, eq(customers.customerTypeId, customerTypes.id))
+      .orderBy(desc(customers.createdAt))
+      .all()
+    return rows.map(joinCustomer)
   },
 )
 
 export const getCustomer = createServerFn({ method: 'GET' })
   .inputValidator((raw: unknown) => parseId(raw))
-  .handler(async ({ data: id }) => {
+  .handler(async ({ data: id }): Promise<CustomerWithType | null> => {
     const row = await db
-      .select()
+      .select({ customer: customers, customerType: customerTypes })
       .from(customers)
+      .innerJoin(customerTypes, eq(customers.customerTypeId, customerTypes.id))
       .where(eq(customers.id, id))
       .get()
-    return row ?? null
+    return row ? joinCustomer(row) : null
   })
 
 export const createCustomer = createServerFn({ method: 'POST' })
   .inputValidator((raw: unknown) => parseCustomerFields(raw))
   .handler(async ({ data }) => {
+    await assertCustomerTypeExists(data.customerTypeId)
     const [row] = await db.insert(customers).values(data).returning()
     return row
   })
@@ -123,6 +159,9 @@ export const updateCustomer = createServerFn({ method: 'POST' })
   })
   .handler(async ({ data }) => {
     const { id, ...patch } = data
+    if (patch.customerTypeId !== undefined) {
+      await assertCustomerTypeExists(patch.customerTypeId)
+    }
     const [row] = await db
       .update(customers)
       .set(patch)

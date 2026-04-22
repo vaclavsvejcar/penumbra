@@ -1,7 +1,7 @@
 import { createFileRoute, getRouteApi, Link } from '@tanstack/react-router'
 import { motion } from 'motion/react'
 import { ArrowRight } from 'lucide-react'
-import { type Customer } from '#/db/schema'
+import type { CustomerWithType } from '#/db/schema'
 
 export const Route = createFileRoute('/customers/$id/')({
   component: CustomerOverview,
@@ -34,10 +34,10 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
 const NOTES_PREVIEW_CHARS = 240
 
 // TODO: derive from real orders once the orders table exists.
-const hasOrders = (_customer: Customer) => false
+const hasOrders = (_customer: CustomerWithType) => false
 
 function CustomerOverview() {
-  const customer = parent.useLoaderData()
+  const { customer } = parent.useLoaderData()
 
   return (
     <motion.div
@@ -53,7 +53,7 @@ function CustomerOverview() {
   )
 }
 
-function ContactSnapshot({ customer }: { customer: Customer }) {
+function ContactSnapshot({ customer }: { customer: CustomerWithType }) {
   return (
     <Section title="Contact">
       <dl className="grid grid-cols-[7rem_1fr] gap-x-6 gap-y-3 text-sm">
@@ -65,7 +65,7 @@ function ContactSnapshot({ customer }: { customer: Customer }) {
   )
 }
 
-function StatsSection({ customer }: { customer: Customer }) {
+function StatsSection({ customer }: { customer: CustomerWithType }) {
   return (
     <Section title="At a glance">
       <div className="border-hairline grid grid-cols-2 border-t sm:grid-cols-4">
@@ -90,7 +90,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   )
 }
 
-function NotesPreview({ customer }: { customer: Customer }) {
+function NotesPreview({ customer }: { customer: CustomerWithType }) {
   if (!customer.notes) return null
   const preview =
     customer.notes.length > NOTES_PREVIEW_CHARS

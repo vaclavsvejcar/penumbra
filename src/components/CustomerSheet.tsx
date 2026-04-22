@@ -1,9 +1,18 @@
 import { useRouter } from '@tanstack/react-router'
+import { Check, Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from '#/components/ui/select'
 import {
   Sheet,
   SheetContent,
@@ -12,45 +21,49 @@ import {
   SheetHeader,
   SheetTitle,
 } from '#/components/ui/sheet'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select'
 import { Textarea } from '#/components/ui/textarea'
-import { customerKinds, type Customer, type CustomerKind } from '#/db/schema'
+import type { Customer, CustomerType, CustomerWithType } from '#/db/schema'
 import { isValidEmail } from '#/lib/validation'
 import { createCustomer, updateCustomer } from '#/server/customers'
+import { createCustomerType } from '#/server/customerTypes'
 
-const kindLabel: Record<CustomerKind, string> = {
-  collector: 'Collector',
-  gallery: 'Gallery',
-}
+const NEW_TYPE_VALUE = '__new_customer_type__'
 
 type CustomerSheetProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  customer?: Customer
+  customer?: Customer | CustomerWithType
+  customerTypes: CustomerType[]
 }
 
 export function CustomerSheet({
   open,
   onOpenChange,
   customer,
+  customerTypes: initialTypes,
 }: CustomerSheetProps) {
   const isEdit = !!customer
   const router = useRouter()
 
+  const defaultTypeId =
+    customer?.customerTypeId ?? initialTypes[0]?.id ?? null
+
+  const [types, setTypes] = useState<CustomerType[]>(initialTypes)
   const [name, setName] = useState(customer?.name ?? '')
-  const [kind, setKind] = useState<CustomerKind>(customer?.kind ?? 'collector')
+  const [customerTypeId, setCustomerTypeId] = useState<number | null>(
+    defaultTypeId,
+  )
   const [email, setEmail] = useState(customer?.email ?? '')
   const [phone, setPhone] = useState(customer?.phone ?? '')
   const [city, setCity] = useState(customer?.city ?? '')
   const [notes, setNotes] = useState(customer?.notes ?? '')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const [addingType, setAddingType] = useState(false)
+  const [newTypeLabel, setNewTypeLabel] = useState('')
+  const [creatingType, setCreatingType] = useState(false)
+  const [typeError, setTypeError] = useState<string | null>(null)
 
   const trimmedEmail = email.trim()
   const emailError =
@@ -65,12 +78,47 @@ export function CustomerSheet({
 
   function resetToInitial() {
     setName(customer?.name ?? '')
-    setKind(customer?.kind ?? 'collector')
+    setCustomerTypeId(defaultTypeId)
     setEmail(customer?.email ?? '')
     setPhone(customer?.phone ?? '')
     setCity(customer?.city ?? '')
     setNotes(customer?.notes ?? '')
+    setAddingType(false)
+    setNewTypeLabel('')
+    setTypeError(null)
     setError(null)
+  }
+
+  function onTypeChange(value: string) {
+    if (value === NEW_TYPE_VALUE) {
+      setAddingType(true)
+      setNewTypeLabel('')
+      setTypeError(null)
+      return
+    }
+    const id = Number(value)
+    if (Number.isInteger(id) && id > 0) setCustomerTypeId(id)
+  }
+
+  async function onAddType() {
+    const label = newTypeLabel.trim()
+    if (!label) {
+      setTypeError('Label is required.')
+      return
+    }
+    setCreatingType(true)
+    setTypeError(null)
+    try {
+      const created = await createCustomerType({ data: { label } })
+      setTypes((prev) => [...prev, created])
+      setCustomerTypeId(created.id)
+      setAddingType(false)
+      setNewTypeLabel('')
+    } catch (err) {
+      setTypeError(err instanceof Error ? err.message : 'Could not add type.')
+    } finally {
+      setCreatingType(false)
+    }
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -79,11 +127,15 @@ export function CustomerSheet({
       setError('Name is required.')
       return
     }
+    if (customerTypeId === null) {
+      setError('Pick a customer type.')
+      return
+    }
     if (emailError || phoneError) return
     setSubmitting(true)
     setError(null)
     try {
-      const payload = { name, kind, email, phone, city, notes }
+      const payload = { name, customerTypeId, email, phone, city, notes }
       if (isEdit) {
         await updateCustomer({ data: { id: customer.id, ...payload } })
       } else {
@@ -131,19 +183,75 @@ export function CustomerSheet({
             />
           </Field>
 
-          <Field label="Kind" htmlFor="customer-kind">
-            <Select value={kind} onValueChange={(v) => setKind(v as CustomerKind)}>
-              <SelectTrigger id="customer-kind" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {customerKinds.map((k) => (
-                  <SelectItem key={k} value={k}>
-                    {kindLabel[k]}
+          <Field label="Type" htmlFor="customer-type" required>
+            {addingType ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  id="customer-type-new"
+                  value={newTypeLabel}
+                  onChange={(e) => setNewTypeLabel(e.target.value)}
+                  placeholder="e.g. Museum"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      void onAddType()
+                    } else if (e.key === 'Escape') {
+                      e.preventDefault()
+                      setAddingType(false)
+                      setTypeError(null)
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={onAddType}
+                  disabled={creatingType || !newTypeLabel.trim()}
+                  aria-label="Save type"
+                >
+                  <Check aria-hidden className="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setAddingType(false)
+                    setTypeError(null)
+                  }}
+                  disabled={creatingType}
+                  aria-label="Cancel"
+                >
+                  <X aria-hidden className="size-4" />
+                </Button>
+              </div>
+            ) : (
+              <Select
+                value={customerTypeId ? String(customerTypeId) : undefined}
+                onValueChange={onTypeChange}
+              >
+                <SelectTrigger id="customer-type" className="w-full">
+                  <SelectValue placeholder="Select a type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {types.map((t) => (
+                    <SelectItem key={t.id} value={String(t.id)}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
+                  <SelectSeparator />
+                  <SelectItem value={NEW_TYPE_VALUE}>
+                    <Plus aria-hidden className="size-3.5" />
+                    Add new type…
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                </SelectContent>
+              </Select>
+            )}
+            {typeError ? (
+              <p className="text-destructive text-xs">{typeError}</p>
+            ) : null}
           </Field>
 
           <Field label="Email" htmlFor="customer-email">
@@ -226,7 +334,13 @@ export function CustomerSheet({
               </Button>
               <Button
                 type="submit"
-                disabled={submitting || !!emailError || !!phoneError}
+                disabled={
+                  submitting ||
+                  !!emailError ||
+                  !!phoneError ||
+                  customerTypeId === null ||
+                  addingType
+                }
               >
                 {submitting ? 'Saving…' : isEdit ? 'Save changes' : 'Save'}
               </Button>

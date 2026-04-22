@@ -12,17 +12,20 @@ import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { CustomerSheet } from '#/components/CustomerSheet'
 import { cn } from '#/lib/utils'
-import { type CustomerKind } from '#/db/schema'
 import { getCustomer } from '#/server/customers'
+import { listCustomerTypes } from '#/server/customerTypes'
 
 export const Route = createFileRoute('/customers/$id')({
   component: CustomerDetailLayout,
   loader: async ({ params }) => {
     const id = Number(params.id)
     if (!Number.isInteger(id) || id <= 0) throw notFound()
-    const customer = await getCustomer({ data: id })
+    const [customer, customerTypes] = await Promise.all([
+      getCustomer({ data: id }),
+      listCustomerTypes(),
+    ])
     if (!customer) throw notFound()
-    return customer
+    return { customer, customerTypes }
   },
   notFoundComponent: CustomerNotFound,
 })
@@ -41,11 +44,6 @@ const item = {
     y: 0,
     transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as const },
   },
-}
-
-const kindLabel: Record<CustomerKind, string> = {
-  collector: 'Collector',
-  gallery: 'Gallery',
 }
 
 const dateFmt = new Intl.DateTimeFormat('en-GB', {
@@ -69,7 +67,7 @@ const tabs = [
 ] as const
 
 function CustomerDetailLayout() {
-  const customer = Route.useLoaderData()
+  const { customer, customerTypes } = Route.useLoaderData()
   const [editOpen, setEditOpen] = useState(false)
 
   return (
@@ -99,7 +97,7 @@ function CustomerDetailLayout() {
               variant="outline"
               className="text-ink-soft font-normal normal-case tracking-normal"
             >
-              {kindLabel[customer.kind]}
+              {customer.customerType.label}
             </Badge>
             <span>·</span>
             <span className="font-mono tabular-nums">
@@ -187,6 +185,7 @@ function CustomerDetailLayout() {
         open={editOpen}
         onOpenChange={setEditOpen}
         customer={customer}
+        customerTypes={customerTypes}
       />
     </motion.section>
   )

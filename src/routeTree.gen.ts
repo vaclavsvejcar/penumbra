@@ -9,18 +9,26 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PrintsRouteImport } from './routes/prints'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as NegativesRouteImport } from './routes/negatives'
 import { Route as EditionsRouteImport } from './routes/editions'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SettingsIndexRouteImport } from './routes/settings.index'
 import { Route as CustomersIndexRouteImport } from './routes/customers.index'
+import { Route as SettingsCustomerTypesRouteImport } from './routes/settings.customer-types'
 import { Route as CustomersIdRouteImport } from './routes/customers.$id'
 import { Route as CustomersIdIndexRouteImport } from './routes/customers.$id.index'
 import { Route as CustomersIdOrdersRouteImport } from './routes/customers.$id.orders'
 import { Route as CustomersIdNotesRouteImport } from './routes/customers.$id.notes'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrintsRoute = PrintsRouteImport.update({
   id: '/prints',
   path: '/prints',
@@ -51,10 +59,20 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SettingsRoute,
+} as any)
 const CustomersIndexRoute = CustomersIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => CustomersRoute,
+} as any)
+const SettingsCustomerTypesRoute = SettingsCustomerTypesRouteImport.update({
+  id: '/customer-types',
+  path: '/customer-types',
+  getParentRoute: () => SettingsRoute,
 } as any)
 const CustomersIdRoute = CustomersIdRouteImport.update({
   id: '/$id',
@@ -84,8 +102,11 @@ export interface FileRoutesByFullPath {
   '/negatives': typeof NegativesRoute
   '/orders': typeof OrdersRoute
   '/prints': typeof PrintsRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/customers/$id': typeof CustomersIdRouteWithChildren
+  '/settings/customer-types': typeof SettingsCustomerTypesRoute
   '/customers/': typeof CustomersIndexRoute
+  '/settings/': typeof SettingsIndexRoute
   '/customers/$id/notes': typeof CustomersIdNotesRoute
   '/customers/$id/orders': typeof CustomersIdOrdersRoute
   '/customers/$id/': typeof CustomersIdIndexRoute
@@ -96,7 +117,9 @@ export interface FileRoutesByTo {
   '/negatives': typeof NegativesRoute
   '/orders': typeof OrdersRoute
   '/prints': typeof PrintsRoute
+  '/settings/customer-types': typeof SettingsCustomerTypesRoute
   '/customers': typeof CustomersIndexRoute
+  '/settings': typeof SettingsIndexRoute
   '/customers/$id/notes': typeof CustomersIdNotesRoute
   '/customers/$id/orders': typeof CustomersIdOrdersRoute
   '/customers/$id': typeof CustomersIdIndexRoute
@@ -109,8 +132,11 @@ export interface FileRoutesById {
   '/negatives': typeof NegativesRoute
   '/orders': typeof OrdersRoute
   '/prints': typeof PrintsRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/customers/$id': typeof CustomersIdRouteWithChildren
+  '/settings/customer-types': typeof SettingsCustomerTypesRoute
   '/customers/': typeof CustomersIndexRoute
+  '/settings/': typeof SettingsIndexRoute
   '/customers/$id/notes': typeof CustomersIdNotesRoute
   '/customers/$id/orders': typeof CustomersIdOrdersRoute
   '/customers/$id/': typeof CustomersIdIndexRoute
@@ -124,8 +150,11 @@ export interface FileRouteTypes {
     | '/negatives'
     | '/orders'
     | '/prints'
+    | '/settings'
     | '/customers/$id'
+    | '/settings/customer-types'
     | '/customers/'
+    | '/settings/'
     | '/customers/$id/notes'
     | '/customers/$id/orders'
     | '/customers/$id/'
@@ -136,7 +165,9 @@ export interface FileRouteTypes {
     | '/negatives'
     | '/orders'
     | '/prints'
+    | '/settings/customer-types'
     | '/customers'
+    | '/settings'
     | '/customers/$id/notes'
     | '/customers/$id/orders'
     | '/customers/$id'
@@ -148,8 +179,11 @@ export interface FileRouteTypes {
     | '/negatives'
     | '/orders'
     | '/prints'
+    | '/settings'
     | '/customers/$id'
+    | '/settings/customer-types'
     | '/customers/'
+    | '/settings/'
     | '/customers/$id/notes'
     | '/customers/$id/orders'
     | '/customers/$id/'
@@ -162,10 +196,18 @@ export interface RootRouteChildren {
   NegativesRoute: typeof NegativesRoute
   OrdersRoute: typeof OrdersRoute
   PrintsRoute: typeof PrintsRoute
+  SettingsRoute: typeof SettingsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/prints': {
       id: '/prints'
       path: '/prints'
@@ -208,12 +250,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/': {
+      id: '/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof SettingsRoute
+    }
     '/customers/': {
       id: '/customers/'
       path: '/'
       fullPath: '/customers/'
       preLoaderRoute: typeof CustomersIndexRouteImport
       parentRoute: typeof CustomersRoute
+    }
+    '/settings/customer-types': {
+      id: '/settings/customer-types'
+      path: '/customer-types'
+      fullPath: '/settings/customer-types'
+      preLoaderRoute: typeof SettingsCustomerTypesRouteImport
+      parentRoute: typeof SettingsRoute
     }
     '/customers/$id': {
       id: '/customers/$id'
@@ -276,6 +332,20 @@ const CustomersRouteWithChildren = CustomersRoute._addFileChildren(
   CustomersRouteChildren,
 )
 
+interface SettingsRouteChildren {
+  SettingsCustomerTypesRoute: typeof SettingsCustomerTypesRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
+}
+
+const SettingsRouteChildren: SettingsRouteChildren = {
+  SettingsCustomerTypesRoute: SettingsCustomerTypesRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
+}
+
+const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
+  SettingsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CustomersRoute: CustomersRouteWithChildren,
@@ -283,6 +353,7 @@ const rootRouteChildren: RootRouteChildren = {
   NegativesRoute: NegativesRoute,
   OrdersRoute: OrdersRoute,
   PrintsRoute: PrintsRoute,
+  SettingsRoute: SettingsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

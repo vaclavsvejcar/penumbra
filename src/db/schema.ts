@@ -9,13 +9,30 @@ export const ping = sqliteTable('ping', {
     .$defaultFn(() => new Date()),
 })
 
-export const customerKinds = ['collector', 'gallery'] as const
-export type CustomerKind = (typeof customerKinds)[number]
+export const customerTypes = sqliteTable('customer_types', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  code: text('code').notNull().unique(),
+  label: text('label').notNull(),
+  sortOrder: integer('sort_order').notNull().default(0),
+  archivedAt: integer('archived_at', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' })
+    .notNull()
+    .default(sql`(unixepoch())`)
+    .$onUpdate(() => new Date()),
+})
+
+export type CustomerType = typeof customerTypes.$inferSelect
+export type NewCustomerType = typeof customerTypes.$inferInsert
 
 export const customers = sqliteTable('customers', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
-  kind: text('kind', { enum: customerKinds }).notNull().default('collector'),
+  customerTypeId: integer('customer_type_id')
+    .notNull()
+    .references(() => customerTypes.id, { onDelete: 'restrict' }),
   email: text('email'),
   phone: text('phone'),
   city: text('city'),
@@ -31,3 +48,7 @@ export const customers = sqliteTable('customers', {
 
 export type Customer = typeof customers.$inferSelect
 export type NewCustomer = typeof customers.$inferInsert
+
+export type CustomerWithType = Customer & {
+  customerType: Pick<CustomerType, 'id' | 'code' | 'label'>
+}

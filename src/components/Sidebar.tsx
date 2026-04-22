@@ -95,6 +95,10 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
           <NavItem to="/customers" label="Customers" onNavigate={onNavigate} />
           <NavItem to="/orders" label="Orders" onNavigate={onNavigate} />
         </NavGroup>
+
+        <NavGroup label="Workshop">
+          <NavItem to="/settings" label="Settings" onNavigate={onNavigate} />
+        </NavGroup>
       </div>
 
       <div className="border-hairline flex items-center justify-between gap-2 border-t px-4 py-3">

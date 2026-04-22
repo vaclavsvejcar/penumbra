@@ -26,7 +26,7 @@ const item = {
 }
 
 function CustomerNotes() {
-  const customer = parent.useLoaderData()
+  const { customer } = parent.useLoaderData()
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [value, setValue] = useState(customer.notes ?? '')
