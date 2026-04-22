@@ -5,64 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1776772063093,
-      "tag": "0000_superb_black_bird",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1776778822158,
-      "tag": "0001_steady_morlun",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1776779386800,
-      "tag": "0002_vengeful_tinkerer",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1776779549610,
-      "tag": "0003_lyrical_raza",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1777276800000,
-      "tag": "0004_customer_types",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1777363200000,
-      "tag": "0005_manufacturers",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "6",
-      "when": 1777449600000,
-      "tag": "0006_film_stocks",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "6",
-      "when": 1777536000000,
-      "tag": "0007_paper_stocks",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "6",
-      "when": 1777622400000,
-      "tag": "0008_developers",
+      "when": 1776855134729,
+      "tag": "0000_even_beyonder",
       "breakpoints": true
     }
   ]

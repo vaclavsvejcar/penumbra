@@ -1,1 +1,0 @@
-ALTER TABLE `customers` ADD `updated_at` integer DEFAULT (unixepoch()) NOT NULL;
