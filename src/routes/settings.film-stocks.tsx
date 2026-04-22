@@ -1,6 +1,6 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { motion } from 'motion/react'
-import { Archive, Check, Pencil, Plus, RotateCcw, X } from 'lucide-react'
+import { Archive, Check, Pencil, Plus, RotateCcw } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
@@ -520,82 +520,84 @@ function FormRow({
           />
         </FieldWrap>
       </div>
-      <div className="grid grid-cols-[5rem_8rem_8rem_5rem_auto_auto] items-end gap-3 sm:gap-4">
-        <FieldWrap htmlFor="fs-iso" label="ISO">
-          <Input
-            id="fs-iso"
-            type="number"
-            value={state.iso}
-            onChange={(e) => update('iso', Number(e.target.value))}
-            className="font-mono tabular-nums"
-            onKeyDown={onKeyDown}
-          />
-        </FieldWrap>
-        <FieldWrap htmlFor="fs-type" label="Type">
-          <Select
-            value={state.type}
-            onValueChange={(v) => update('type', v as FilmType)}
+      <div className="flex flex-wrap items-end gap-3 sm:gap-4">
+        <div className="grid grid-cols-[5rem_8rem_8rem_5rem] items-end gap-3 sm:gap-4">
+          <FieldWrap htmlFor="fs-iso" label="ISO">
+            <Input
+              id="fs-iso"
+              type="number"
+              value={state.iso}
+              onChange={(e) => update('iso', Number(e.target.value))}
+              className="font-mono tabular-nums"
+              onKeyDown={onKeyDown}
+            />
+          </FieldWrap>
+          <FieldWrap htmlFor="fs-type" label="Type">
+            <Select
+              value={state.type}
+              onValueChange={(v) => update('type', v as FilmType)}
+            >
+              <SelectTrigger id="fs-type" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {filmTypes.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {typeLabels[t]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FieldWrap>
+          <FieldWrap htmlFor="fs-process" label="Process">
+            <Select
+              value={state.process}
+              onValueChange={(v) => update('process', v as FilmProcess)}
+            >
+              <SelectTrigger id="fs-process" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {filmProcesses.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {processLabels[p]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FieldWrap>
+          <FieldWrap htmlFor="fs-sort" label="Sort">
+            <Input
+              id="fs-sort"
+              type="number"
+              value={state.sortOrder}
+              onChange={(e) => update('sortOrder', Number(e.target.value))}
+              className="font-mono tabular-nums"
+              onKeyDown={onKeyDown}
+            />
+          </FieldWrap>
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onCancel}
+            disabled={saving}
           >
-            <SelectTrigger id="fs-type" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {filmTypes.map((t) => (
-                <SelectItem key={t} value={t}>
-                  {typeLabels[t]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </FieldWrap>
-        <FieldWrap htmlFor="fs-process" label="Process">
-          <Select
-            value={state.process}
-            onValueChange={(v) => update('process', v as FilmProcess)}
+            Cancel
+          </Button>
+          <Button
+            variant="safelight"
+            size="sm"
+            onClick={onSave}
+            disabled={
+              saving || !state.label.trim() || state.manufacturerId === null
+            }
           >
-            <SelectTrigger id="fs-process" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {filmProcesses.map((p) => (
-                <SelectItem key={p} value={p}>
-                  {processLabels[p]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </FieldWrap>
-        <FieldWrap htmlFor="fs-sort" label="Sort">
-          <Input
-            id="fs-sort"
-            type="number"
-            value={state.sortOrder}
-            onChange={(e) => update('sortOrder', Number(e.target.value))}
-            className="font-mono tabular-nums"
-            onKeyDown={onKeyDown}
-          />
-        </FieldWrap>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onSave}
-          disabled={
-            saving || !state.label.trim() || state.manufacturerId === null
-          }
-          aria-label={submitLabel}
-        >
-          <Check aria-hidden className="size-3.5" />
-          <span>{submitLabel}</span>
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onCancel}
-          disabled={saving}
-          aria-label="Cancel"
-        >
-          <X aria-hidden className="size-3.5" />
-        </Button>
+            <Check aria-hidden className="size-3.5" />
+            <span>{submitLabel}</span>
+          </Button>
+        </div>
       </div>
     </div>
   )

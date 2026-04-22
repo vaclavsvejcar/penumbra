@@ -20,7 +20,8 @@ Penumbra is a personal inventory app for a traditional film photographer who sel
 ## Design principles
 
 - **B/W/red palette in OKLCH**, defined in `src/styles.css` and exposed to Tailwind through an `@theme` block. Use tokens (`bg-paper`, `text-ink`, `text-ink-soft`, `border-hairline`, `bg-safelight`, …) — never hex or named colors.
-- **Safelight red is semantic, not decoration.** Reserve it for state signals (active route, sold out, destructive actions) and the brand monogram. Don't scatter it as a passive accent.
+- **Safelight red is the brand accent, not decoration.** Reserved for: the brand monogram, active state signals (active nav, sold out), and the primary commit action in forms (Save/Add, via `variant="safelight"`). Don't scatter it as a passive accent.
+- **Destructive actions use `variant="destructive-outline"`** — red border + red text on transparent background, never a solid fill. Structural outline-vs-fill is the signal that distinguishes "commit" (safelight fill) from "dangerous" (red outline). Always pair with a confirmation step.
 - **Typography hierarchy:** Instrument Serif italic for display + brand. Geist sans for UI, forms, nav. Geist Mono with `tabular-nums` for numbers, edition IDs, versions.
 - **Editorial over utilitarian:** catalog-style `N° 01` kickers, small-caps labels via `.kicker`, hairline dividers instead of cards, subtle film-grain overlay.
 - **Hairlines over shadows.** Prefer `border-hairline` over `shadow-*`.

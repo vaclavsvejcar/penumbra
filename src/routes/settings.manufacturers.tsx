@@ -1,6 +1,6 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { motion } from 'motion/react'
-import { Archive, Check, Pencil, Plus, RotateCcw, X } from 'lucide-react'
+import { Archive, Check, Pencil, Plus, RotateCcw } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
@@ -439,23 +439,21 @@ function FormRow({
         />
       </div>
       <Button
-        variant="outline"
-        size="sm"
-        onClick={onSave}
-        disabled={saving || !label.trim()}
-        aria-label={submitLabel}
-      >
-        <Check aria-hidden className="size-3.5" />
-        <span>{submitLabel}</span>
-      </Button>
-      <Button
         variant="ghost"
         size="sm"
         onClick={onCancel}
         disabled={saving}
-        aria-label="Cancel"
       >
-        <X aria-hidden className="size-3.5" />
+        Cancel
+      </Button>
+      <Button
+        variant="safelight"
+        size="sm"
+        onClick={onSave}
+        disabled={saving || !label.trim()}
+      >
+        <Check aria-hidden className="size-3.5" />
+        <span>{submitLabel}</span>
       </Button>
     </div>
   )
