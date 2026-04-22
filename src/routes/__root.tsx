@@ -3,6 +3,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import Sidebar from '../components/Sidebar'
 import MobileNav from '../components/MobileNav'
+import EnvBadge from '../components/EnvBadge'
 
 import appCss from '../styles.css?url'
 
@@ -72,6 +73,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             </main>
           </div>
         </div>
+
+        <EnvBadge />
 
         <TanStackDevtools
           config={{
