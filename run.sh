@@ -339,15 +339,7 @@ ok "Build complete"
 # ── Server lifecycle ─────────────────────────────────────────────────────────
 cleanup() {
   if [[ -n "${SERVER_PID:-}" ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
-    kill -- -"$SERVER_PID" 2>/dev/null || kill "$SERVER_PID" 2>/dev/null
-    local i=0
-    while kill -0 "$SERVER_PID" 2>/dev/null && [[ $i -lt 50 ]]; do
-      sleep 0.1
-      ((i++))
-    done
-    if kill -0 "$SERVER_PID" 2>/dev/null; then
-      kill -9 -- -"$SERVER_PID" 2>/dev/null || kill -9 "$SERVER_PID" 2>/dev/null
-    fi
+    kill -9 -- -"$SERVER_PID" 2>/dev/null || kill -9 "$SERVER_PID" 2>/dev/null
     wait "$SERVER_PID" 2>/dev/null || true
   fi
   SERVER_PID=""
