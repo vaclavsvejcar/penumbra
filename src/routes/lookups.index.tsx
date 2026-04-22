@@ -2,8 +2,8 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { motion } from 'motion/react'
 import { ArrowRight } from 'lucide-react'
 
-export const Route = createFileRoute('/settings/')({
-  component: SettingsOverview,
+export const Route = createFileRoute('/lookups/')({
+  component: LookupsOverview,
 })
 
 const item = {
@@ -17,11 +17,11 @@ const item = {
 
 type Category = {
   to:
-    | '/settings/customer-types'
-    | '/settings/manufacturers'
-    | '/settings/film-stocks'
-    | '/settings/paper-stocks'
-    | '/settings/developers'
+    | '/lookups/customer-types'
+    | '/lookups/manufacturers'
+    | '/lookups/film-stocks'
+    | '/lookups/paper-stocks'
+    | '/lookups/developers'
   kicker: string
   title: string
   description: string
@@ -29,35 +29,35 @@ type Category = {
 
 const categories: Category[] = [
   {
-    to: '/settings/customer-types',
+    to: '/lookups/customer-types',
     kicker: 'Lookup',
     title: 'Customer types',
     description:
       'Manage the kinds of customers — collectors, galleries, and whatever else belongs in your ledger.',
   },
   {
-    to: '/settings/manufacturers',
+    to: '/lookups/manufacturers',
     kicker: 'Lookup',
     title: 'Manufacturers',
     description:
       'Brands of film, paper, and chemistry. One shared list across the whole archive.',
   },
   {
-    to: '/settings/film-stocks',
+    to: '/lookups/film-stocks',
     kicker: 'Lookup',
     title: 'Film stocks',
     description:
       'The emulsions you shoot, each bound to its manufacturer, with box speed and process.',
   },
   {
-    to: '/settings/paper-stocks',
+    to: '/lookups/paper-stocks',
     kicker: 'Lookup',
     title: 'Paper stocks',
     description:
       'Darkroom papers — base, tone, and whether they’re variable-contrast or graded.',
   },
   {
-    to: '/settings/developers',
+    to: '/lookups/developers',
     kicker: 'Lookup',
     title: 'Developers',
     description:
@@ -65,7 +65,7 @@ const categories: Category[] = [
   },
 ]
 
-function SettingsOverview() {
+function LookupsOverview() {
   return (
     <motion.div initial="hidden" animate="visible" variants={item}>
       <ul className="border-hairline border-t">

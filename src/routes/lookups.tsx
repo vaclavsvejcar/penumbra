@@ -2,8 +2,8 @@ import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import { motion } from 'motion/react'
 import { cn } from '#/lib/utils'
 
-export const Route = createFileRoute('/settings')({
-  component: SettingsLayout,
+export const Route = createFileRoute('/lookups')({
+  component: LookupsLayout,
 })
 
 const container = {
@@ -23,15 +23,15 @@ const item = {
 }
 
 const tabs = [
-  { to: '/settings', label: 'Overview', exact: true },
-  { to: '/settings/customer-types', label: 'Customer types', exact: false },
-  { to: '/settings/manufacturers', label: 'Manufacturers', exact: false },
-  { to: '/settings/film-stocks', label: 'Film stocks', exact: false },
-  { to: '/settings/paper-stocks', label: 'Paper stocks', exact: false },
-  { to: '/settings/developers', label: 'Developers', exact: false },
+  { to: '/lookups', label: 'Overview', exact: true },
+  { to: '/lookups/customer-types', label: 'Customer types', exact: false },
+  { to: '/lookups/manufacturers', label: 'Manufacturers', exact: false },
+  { to: '/lookups/film-stocks', label: 'Film stocks', exact: false },
+  { to: '/lookups/paper-stocks', label: 'Paper stocks', exact: false },
+  { to: '/lookups/developers', label: 'Developers', exact: false },
 ] as const
 
-function SettingsLayout() {
+function LookupsLayout() {
   return (
     <motion.section
       className="py-16 sm:py-24"
@@ -40,19 +40,20 @@ function SettingsLayout() {
       variants={container}
     >
       <motion.div variants={item}>
-        <p className="kicker mb-4">Workshop</p>
+        <p className="kicker mb-4">Settings</p>
         <h1 className="font-serif text-ink mb-4 text-5xl leading-[0.95] font-normal tracking-tight italic sm:text-6xl">
-          Settings
+          Lookups
         </h1>
         <p className="text-ink-soft max-w-xl text-base leading-relaxed sm:text-lg">
-          Reference lists and preferences that shape the rest of the app.
+          Reference data that shapes the rest of the app — customers,
+          materials, chemistry.
         </p>
       </motion.div>
 
       <motion.nav
         variants={item}
         className="border-hairline mt-12 flex gap-8 overflow-x-auto overflow-y-hidden border-b whitespace-nowrap"
-        aria-label="Settings sections"
+        aria-label="Lookup sections"
       >
         {tabs.map((tab) => (
           <Link
@@ -75,7 +76,7 @@ function SettingsLayout() {
                 </span>
                 {isActive ? (
                   <motion.span
-                    layoutId="settings-tab-indicator"
+                    layoutId="lookups-tab-indicator"
                     aria-hidden
                     className="bg-safelight absolute right-0 -bottom-px left-0 h-[2px]"
                     transition={{

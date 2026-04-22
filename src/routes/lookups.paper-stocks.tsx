@@ -20,27 +20,29 @@ import {
   useLookupAdmin,
 } from '#/components/lookup'
 import {
-  filmProcesses,
-  filmTypes,
-  type FilmProcess,
-  type FilmStockWithManufacturer,
-  type FilmType,
+  paperBases,
+  paperContrasts,
+  paperTones,
   type Manufacturer,
+  type PaperBase,
+  type PaperContrast,
+  type PaperStockWithManufacturer,
+  type PaperTone,
 } from '#/db/schema'
 import { cn } from '#/lib/utils'
-import {
-  archiveFilmStock,
-  createFilmStock,
-  listAllFilmStocks,
-  unarchiveFilmStock,
-  updateFilmStock,
-} from '#/server/filmStocks'
 import { listManufacturers } from '#/server/manufacturers'
+import {
+  archivePaperStock,
+  createPaperStock,
+  listAllPaperStocks,
+  unarchivePaperStock,
+  updatePaperStock,
+} from '#/server/paperStocks'
 
-export const Route = createFileRoute('/settings/film-stocks')({
-  component: FilmStocksAdmin,
+export const Route = createFileRoute('/lookups/paper-stocks')({
+  component: PaperStocksAdmin,
   loader: async () => ({
-    stocks: await listAllFilmStocks(),
+    stocks: await listAllPaperStocks(),
     manufacturers: await listManufacturers(),
   }),
 })
@@ -54,20 +56,30 @@ const fade = {
   },
 }
 
-const typeLabels: Record<FilmType, string> = {
-  bw: 'B&W',
-  color_neg: 'Color neg',
-  slide: 'Slide',
+const baseLabels: Record<PaperBase, string> = {
+  rc: 'RC',
+  fb: 'FB',
 }
 
-const processLabels: Record<FilmProcess, string> = {
-  bw: 'B&W',
-  c41: 'C-41',
-  e6: 'E-6',
-  bw_reversal: 'B&W rev.',
+const toneLabels: Record<PaperTone, string> = {
+  neutral: 'Neutral',
+  warm: 'Warm',
+  cool: 'Cool',
 }
 
-function FilmStocksAdmin() {
+const contrastLabels: Record<PaperContrast, string> = {
+  variable: 'Variable',
+  graded: 'Graded',
+}
+
+function contrastDisplay(stock: PaperStockWithManufacturer): string {
+  if (stock.contrast === 'graded') {
+    return stock.grade !== null ? `Graded ${stock.grade}` : 'Graded'
+  }
+  return 'Variable'
+}
+
+function PaperStocksAdmin() {
   const { stocks, manufacturers } = Route.useLoaderData()
   const admin = useLookupAdmin({
     rows: stocks,
@@ -75,8 +87,8 @@ function FilmStocksAdmin() {
       s.label.toLowerCase().includes(q) ||
       s.code.toLowerCase().includes(q) ||
       s.manufacturer.label.toLowerCase().includes(q),
-    archiveFn: archiveFilmStock,
-    unarchiveFn: unarchiveFilmStock,
+    archiveFn: archivePaperStock,
+    unarchiveFn: unarchivePaperStock,
   })
 
   const canCreate = manufacturers.length > 0
@@ -84,9 +96,9 @@ function FilmStocksAdmin() {
   return (
     <motion.div initial="hidden" animate="visible" variants={fade}>
       <LookupHeader
-        title="Film stocks"
-        description="The emulsions you shoot. Each stock lives under one manufacturer and carries its box speed and intended process."
-        addLabel="Add stock"
+        title="Paper stocks"
+        description="Darkroom papers. Each stock lives under one manufacturer and records its base, tone, and whether it's variable-contrast or graded."
+        addLabel="Add paper"
         onAdd={admin.startCreating}
         addDisabled={admin.creating || admin.busy || !canCreate}
       />
@@ -94,7 +106,7 @@ function FilmStocksAdmin() {
       {!canCreate ? (
         <p className="text-ink-soft mb-4 text-sm">
           Add at least one manufacturer in the Manufacturers tab before
-          creating a film stock.
+          creating a paper stock.
         </p>
       ) : null}
 
@@ -107,7 +119,7 @@ function FilmStocksAdmin() {
       <LookupSearch
         value={admin.query}
         onChange={admin.setQuery}
-        placeholder="Find a stock…"
+        placeholder="Find a paper…"
         total={stocks.length}
         filtered={admin.filtered.length}
       />
@@ -119,7 +131,7 @@ function FilmStocksAdmin() {
         onClearQuery={admin.clearQuery}
         creating={admin.creating}
         editingId={admin.editingId}
-        emptyMessage="No film stocks defined yet."
+        emptyMessage="No paper stocks defined yet."
         renderNewRow={() => (
           <NewRow
             manufacturers={manufacturers}
@@ -159,7 +171,7 @@ function DisplayRow({
   onArchive,
   onUnarchive,
 }: {
-  stock: FilmStockWithManufacturer
+  stock: PaperStockWithManufacturer
   busy: boolean
   onEdit: () => void
   onArchive: () => void
@@ -169,7 +181,7 @@ function DisplayRow({
   return (
     <div
       className={cn(
-        'grid grid-cols-[1fr_3rem_5.5rem_5.5rem_2.5rem_auto_auto] items-center gap-3 py-3.5 sm:gap-5',
+        'grid grid-cols-[1fr_3.5rem_5rem_6rem_2.5rem_auto_auto] items-center gap-3 py-3.5 sm:gap-5',
         archived && 'opacity-55',
       )}
     >
@@ -181,20 +193,23 @@ function DisplayRow({
           <span className="font-mono tabular-nums">{stock.code}</span>
         </p>
       </div>
-      <span className="text-ink-soft text-right font-mono text-sm tabular-nums">
-        {stock.iso}
-      </span>
       <Badge
         variant="outline"
         className="text-ink-soft font-normal normal-case tracking-normal"
       >
-        {typeLabels[stock.type]}
+        {baseLabels[stock.base]}
       </Badge>
       <Badge
         variant="outline"
         className="text-ink-soft font-normal normal-case tracking-normal"
       >
-        {processLabels[stock.process]}
+        {toneLabels[stock.tone]}
+      </Badge>
+      <Badge
+        variant="outline"
+        className="text-ink-soft font-normal normal-case tracking-normal"
+      >
+        {contrastDisplay(stock)}
       </Badge>
       <span className="text-ink-muted text-right font-mono text-xs tabular-nums">
         {stock.sortOrder}
@@ -215,9 +230,10 @@ type FormState = {
   label: string
   code: string
   manufacturerId: number | null
-  iso: number
-  type: FilmType
-  process: FilmProcess
+  base: PaperBase
+  tone: PaperTone
+  contrast: PaperContrast
+  grade: number
   sortOrder: number
 }
 
@@ -240,9 +256,10 @@ function NewRow({
     label: '',
     code: '',
     manufacturerId: manufacturers[0]?.id ?? null,
-    iso: 400,
-    type: 'bw',
-    process: 'bw',
+    base: 'rc',
+    tone: 'neutral',
+    contrast: 'variable',
+    grade: 2,
     sortOrder: nextOrder,
   })
   const [saving, setSaving] = useState(false)
@@ -251,20 +268,21 @@ function NewRow({
     if (!state.label.trim() || state.manufacturerId === null) return
     setSaving(true)
     try {
-      await createFilmStock({
+      await createPaperStock({
         data: {
           label: state.label,
           code: state.code.trim() || undefined,
           manufacturerId: state.manufacturerId,
-          iso: state.iso,
-          type: state.type,
-          process: state.process,
+          base: state.base,
+          tone: state.tone,
+          contrast: state.contrast,
+          grade: state.contrast === 'graded' ? state.grade : null,
           sortOrder: state.sortOrder,
         },
       })
       await onSaved()
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Could not create stock.')
+      onError(err instanceof Error ? err.message : 'Could not create paper.')
     } finally {
       setSaving(false)
     }
@@ -290,7 +308,7 @@ function EditRow({
   onSaved,
   onError,
 }: {
-  stock: FilmStockWithManufacturer
+  stock: PaperStockWithManufacturer
   manufacturers: Manufacturer[]
   onCancel: () => void
   onSaved: () => void | Promise<void>
@@ -300,9 +318,10 @@ function EditRow({
     label: stock.label,
     code: stock.code,
     manufacturerId: stock.manufacturerId,
-    iso: stock.iso,
-    type: stock.type,
-    process: stock.process,
+    base: stock.base,
+    tone: stock.tone,
+    contrast: stock.contrast,
+    grade: stock.grade ?? 2,
     sortOrder: stock.sortOrder,
   })
   const [saving, setSaving] = useState(false)
@@ -311,21 +330,22 @@ function EditRow({
     if (!state.label.trim() || state.manufacturerId === null) return
     setSaving(true)
     try {
-      await updateFilmStock({
+      await updatePaperStock({
         data: {
           id: stock.id,
           label: state.label,
           code: state.code,
           manufacturerId: state.manufacturerId,
-          iso: state.iso,
-          type: state.type,
-          process: state.process,
+          base: state.base,
+          tone: state.tone,
+          contrast: state.contrast,
+          grade: state.contrast === 'graded' ? state.grade : null,
           sortOrder: state.sortOrder,
         },
       })
       await onSaved()
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Could not save stock.')
+      onError(err instanceof Error ? err.message : 'Could not save paper.')
     } finally {
       setSaving(false)
     }
@@ -374,15 +394,17 @@ function FormRow({
     }
   }
 
+  const isGraded = state.contrast === 'graded'
+
   return (
     <div className="flex flex-col gap-3 py-3">
       <div className="grid grid-cols-[9rem_1fr_10rem] items-end gap-3 sm:gap-4">
-        <FieldWrap htmlFor="fs-mfg" label="Manufacturer">
+        <FieldWrap htmlFor="ps-mfg" label="Manufacturer">
           <Select
             value={state.manufacturerId ? String(state.manufacturerId) : ''}
             onValueChange={(v) => update('manufacturerId', Number(v))}
           >
-            <SelectTrigger id="fs-mfg" className="w-full">
+            <SelectTrigger id="ps-mfg" className="w-full">
               <SelectValue placeholder="Pick one" />
             </SelectTrigger>
             <SelectContent>
@@ -394,18 +416,18 @@ function FormRow({
             </SelectContent>
           </Select>
         </FieldWrap>
-        <FieldWrap htmlFor="fs-label" label="Label">
+        <FieldWrap htmlFor="ps-label" label="Label">
           <Input
-            id="fs-label"
+            id="ps-label"
             value={state.label}
             onChange={(e) => update('label', e.target.value)}
             autoFocus
             onKeyDown={onKeyDown}
           />
         </FieldWrap>
-        <FieldWrap htmlFor="fs-code" label="Code">
+        <FieldWrap htmlFor="ps-code" label="Code">
           <Input
-            id="fs-code"
+            id="ps-code"
             value={state.code}
             onChange={(e) => update('code', e.target.value)}
             placeholder="auto from label"
@@ -415,54 +437,75 @@ function FormRow({
         </FieldWrap>
       </div>
       <div className="flex flex-wrap items-end gap-3 sm:gap-4">
-        <div className="grid grid-cols-[5rem_8rem_8rem_5rem] items-end gap-3 sm:gap-4">
-          <FieldWrap htmlFor="fs-iso" label="ISO">
+        <div className="grid grid-cols-[5rem_6.5rem_7rem_5rem_5rem] items-end gap-3 sm:gap-4">
+          <FieldWrap htmlFor="ps-base" label="Base">
+            <Select
+              value={state.base}
+              onValueChange={(v) => update('base', v as PaperBase)}
+            >
+              <SelectTrigger id="ps-base" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {paperBases.map((b) => (
+                  <SelectItem key={b} value={b}>
+                    {baseLabels[b]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FieldWrap>
+          <FieldWrap htmlFor="ps-tone" label="Tone">
+            <Select
+              value={state.tone}
+              onValueChange={(v) => update('tone', v as PaperTone)}
+            >
+              <SelectTrigger id="ps-tone" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {paperTones.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {toneLabels[t]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FieldWrap>
+          <FieldWrap htmlFor="ps-contrast" label="Contrast">
+            <Select
+              value={state.contrast}
+              onValueChange={(v) => update('contrast', v as PaperContrast)}
+            >
+              <SelectTrigger id="ps-contrast" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {paperContrasts.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {contrastLabels[c]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FieldWrap>
+          <FieldWrap htmlFor="ps-grade" label="Grade">
             <Input
-              id="fs-iso"
+              id="ps-grade"
               type="number"
-              value={state.iso}
-              onChange={(e) => update('iso', Number(e.target.value))}
+              min={0}
+              max={5}
+              step={1}
+              value={state.grade}
+              onChange={(e) => update('grade', Number(e.target.value))}
               className="font-mono tabular-nums"
+              disabled={!isGraded}
               onKeyDown={onKeyDown}
             />
           </FieldWrap>
-          <FieldWrap htmlFor="fs-type" label="Type">
-            <Select
-              value={state.type}
-              onValueChange={(v) => update('type', v as FilmType)}
-            >
-              <SelectTrigger id="fs-type" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {filmTypes.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {typeLabels[t]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </FieldWrap>
-          <FieldWrap htmlFor="fs-process" label="Process">
-            <Select
-              value={state.process}
-              onValueChange={(v) => update('process', v as FilmProcess)}
-            >
-              <SelectTrigger id="fs-process" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {filmProcesses.map((p) => (
-                  <SelectItem key={p} value={p}>
-                    {processLabels[p]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </FieldWrap>
-          <FieldWrap htmlFor="fs-sort" label="Sort">
+          <FieldWrap htmlFor="ps-sort" label="Sort">
             <Input
-              id="fs-sort"
+              id="ps-sort"
               type="number"
               value={state.sortOrder}
               onChange={(e) => update('sortOrder', Number(e.target.value))}

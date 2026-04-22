@@ -9,30 +9,25 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PrintsRouteImport } from './routes/prints'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as NegativesRouteImport } from './routes/negatives'
+import { Route as LookupsRouteImport } from './routes/lookups'
 import { Route as EditionsRouteImport } from './routes/editions'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SettingsIndexRouteImport } from './routes/settings.index'
+import { Route as LookupsIndexRouteImport } from './routes/lookups.index'
 import { Route as CustomersIndexRouteImport } from './routes/customers.index'
-import { Route as SettingsPaperStocksRouteImport } from './routes/settings.paper-stocks'
-import { Route as SettingsManufacturersRouteImport } from './routes/settings.manufacturers'
-import { Route as SettingsFilmStocksRouteImport } from './routes/settings.film-stocks'
-import { Route as SettingsDevelopersRouteImport } from './routes/settings.developers'
-import { Route as SettingsCustomerTypesRouteImport } from './routes/settings.customer-types'
+import { Route as LookupsPaperStocksRouteImport } from './routes/lookups.paper-stocks'
+import { Route as LookupsManufacturersRouteImport } from './routes/lookups.manufacturers'
+import { Route as LookupsFilmStocksRouteImport } from './routes/lookups.film-stocks'
+import { Route as LookupsDevelopersRouteImport } from './routes/lookups.developers'
+import { Route as LookupsCustomerTypesRouteImport } from './routes/lookups.customer-types'
 import { Route as CustomersIdRouteImport } from './routes/customers.$id'
 import { Route as CustomersIdIndexRouteImport } from './routes/customers.$id.index'
 import { Route as CustomersIdOrdersRouteImport } from './routes/customers.$id.orders'
 import { Route as CustomersIdNotesRouteImport } from './routes/customers.$id.notes'
 
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PrintsRoute = PrintsRouteImport.update({
   id: '/prints',
   path: '/prints',
@@ -46,6 +41,11 @@ const OrdersRoute = OrdersRouteImport.update({
 const NegativesRoute = NegativesRouteImport.update({
   id: '/negatives',
   path: '/negatives',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LookupsRoute = LookupsRouteImport.update({
+  id: '/lookups',
+  path: '/lookups',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EditionsRoute = EditionsRouteImport.update({
@@ -63,40 +63,40 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SettingsIndexRoute = SettingsIndexRouteImport.update({
+const LookupsIndexRoute = LookupsIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => SettingsRoute,
+  getParentRoute: () => LookupsRoute,
 } as any)
 const CustomersIndexRoute = CustomersIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => CustomersRoute,
 } as any)
-const SettingsPaperStocksRoute = SettingsPaperStocksRouteImport.update({
+const LookupsPaperStocksRoute = LookupsPaperStocksRouteImport.update({
   id: '/paper-stocks',
   path: '/paper-stocks',
-  getParentRoute: () => SettingsRoute,
+  getParentRoute: () => LookupsRoute,
 } as any)
-const SettingsManufacturersRoute = SettingsManufacturersRouteImport.update({
+const LookupsManufacturersRoute = LookupsManufacturersRouteImport.update({
   id: '/manufacturers',
   path: '/manufacturers',
-  getParentRoute: () => SettingsRoute,
+  getParentRoute: () => LookupsRoute,
 } as any)
-const SettingsFilmStocksRoute = SettingsFilmStocksRouteImport.update({
+const LookupsFilmStocksRoute = LookupsFilmStocksRouteImport.update({
   id: '/film-stocks',
   path: '/film-stocks',
-  getParentRoute: () => SettingsRoute,
+  getParentRoute: () => LookupsRoute,
 } as any)
-const SettingsDevelopersRoute = SettingsDevelopersRouteImport.update({
+const LookupsDevelopersRoute = LookupsDevelopersRouteImport.update({
   id: '/developers',
   path: '/developers',
-  getParentRoute: () => SettingsRoute,
+  getParentRoute: () => LookupsRoute,
 } as any)
-const SettingsCustomerTypesRoute = SettingsCustomerTypesRouteImport.update({
+const LookupsCustomerTypesRoute = LookupsCustomerTypesRouteImport.update({
   id: '/customer-types',
   path: '/customer-types',
-  getParentRoute: () => SettingsRoute,
+  getParentRoute: () => LookupsRoute,
 } as any)
 const CustomersIdRoute = CustomersIdRouteImport.update({
   id: '/$id',
@@ -123,18 +123,18 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/customers': typeof CustomersRouteWithChildren
   '/editions': typeof EditionsRoute
+  '/lookups': typeof LookupsRouteWithChildren
   '/negatives': typeof NegativesRoute
   '/orders': typeof OrdersRoute
   '/prints': typeof PrintsRoute
-  '/settings': typeof SettingsRouteWithChildren
   '/customers/$id': typeof CustomersIdRouteWithChildren
-  '/settings/customer-types': typeof SettingsCustomerTypesRoute
-  '/settings/developers': typeof SettingsDevelopersRoute
-  '/settings/film-stocks': typeof SettingsFilmStocksRoute
-  '/settings/manufacturers': typeof SettingsManufacturersRoute
-  '/settings/paper-stocks': typeof SettingsPaperStocksRoute
+  '/lookups/customer-types': typeof LookupsCustomerTypesRoute
+  '/lookups/developers': typeof LookupsDevelopersRoute
+  '/lookups/film-stocks': typeof LookupsFilmStocksRoute
+  '/lookups/manufacturers': typeof LookupsManufacturersRoute
+  '/lookups/paper-stocks': typeof LookupsPaperStocksRoute
   '/customers/': typeof CustomersIndexRoute
-  '/settings/': typeof SettingsIndexRoute
+  '/lookups/': typeof LookupsIndexRoute
   '/customers/$id/notes': typeof CustomersIdNotesRoute
   '/customers/$id/orders': typeof CustomersIdOrdersRoute
   '/customers/$id/': typeof CustomersIdIndexRoute
@@ -145,13 +145,13 @@ export interface FileRoutesByTo {
   '/negatives': typeof NegativesRoute
   '/orders': typeof OrdersRoute
   '/prints': typeof PrintsRoute
-  '/settings/customer-types': typeof SettingsCustomerTypesRoute
-  '/settings/developers': typeof SettingsDevelopersRoute
-  '/settings/film-stocks': typeof SettingsFilmStocksRoute
-  '/settings/manufacturers': typeof SettingsManufacturersRoute
-  '/settings/paper-stocks': typeof SettingsPaperStocksRoute
+  '/lookups/customer-types': typeof LookupsCustomerTypesRoute
+  '/lookups/developers': typeof LookupsDevelopersRoute
+  '/lookups/film-stocks': typeof LookupsFilmStocksRoute
+  '/lookups/manufacturers': typeof LookupsManufacturersRoute
+  '/lookups/paper-stocks': typeof LookupsPaperStocksRoute
   '/customers': typeof CustomersIndexRoute
-  '/settings': typeof SettingsIndexRoute
+  '/lookups': typeof LookupsIndexRoute
   '/customers/$id/notes': typeof CustomersIdNotesRoute
   '/customers/$id/orders': typeof CustomersIdOrdersRoute
   '/customers/$id': typeof CustomersIdIndexRoute
@@ -161,18 +161,18 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/customers': typeof CustomersRouteWithChildren
   '/editions': typeof EditionsRoute
+  '/lookups': typeof LookupsRouteWithChildren
   '/negatives': typeof NegativesRoute
   '/orders': typeof OrdersRoute
   '/prints': typeof PrintsRoute
-  '/settings': typeof SettingsRouteWithChildren
   '/customers/$id': typeof CustomersIdRouteWithChildren
-  '/settings/customer-types': typeof SettingsCustomerTypesRoute
-  '/settings/developers': typeof SettingsDevelopersRoute
-  '/settings/film-stocks': typeof SettingsFilmStocksRoute
-  '/settings/manufacturers': typeof SettingsManufacturersRoute
-  '/settings/paper-stocks': typeof SettingsPaperStocksRoute
+  '/lookups/customer-types': typeof LookupsCustomerTypesRoute
+  '/lookups/developers': typeof LookupsDevelopersRoute
+  '/lookups/film-stocks': typeof LookupsFilmStocksRoute
+  '/lookups/manufacturers': typeof LookupsManufacturersRoute
+  '/lookups/paper-stocks': typeof LookupsPaperStocksRoute
   '/customers/': typeof CustomersIndexRoute
-  '/settings/': typeof SettingsIndexRoute
+  '/lookups/': typeof LookupsIndexRoute
   '/customers/$id/notes': typeof CustomersIdNotesRoute
   '/customers/$id/orders': typeof CustomersIdOrdersRoute
   '/customers/$id/': typeof CustomersIdIndexRoute
@@ -183,18 +183,18 @@ export interface FileRouteTypes {
     | '/'
     | '/customers'
     | '/editions'
+    | '/lookups'
     | '/negatives'
     | '/orders'
     | '/prints'
-    | '/settings'
     | '/customers/$id'
-    | '/settings/customer-types'
-    | '/settings/developers'
-    | '/settings/film-stocks'
-    | '/settings/manufacturers'
-    | '/settings/paper-stocks'
+    | '/lookups/customer-types'
+    | '/lookups/developers'
+    | '/lookups/film-stocks'
+    | '/lookups/manufacturers'
+    | '/lookups/paper-stocks'
     | '/customers/'
-    | '/settings/'
+    | '/lookups/'
     | '/customers/$id/notes'
     | '/customers/$id/orders'
     | '/customers/$id/'
@@ -205,13 +205,13 @@ export interface FileRouteTypes {
     | '/negatives'
     | '/orders'
     | '/prints'
-    | '/settings/customer-types'
-    | '/settings/developers'
-    | '/settings/film-stocks'
-    | '/settings/manufacturers'
-    | '/settings/paper-stocks'
+    | '/lookups/customer-types'
+    | '/lookups/developers'
+    | '/lookups/film-stocks'
+    | '/lookups/manufacturers'
+    | '/lookups/paper-stocks'
     | '/customers'
-    | '/settings'
+    | '/lookups'
     | '/customers/$id/notes'
     | '/customers/$id/orders'
     | '/customers/$id'
@@ -220,18 +220,18 @@ export interface FileRouteTypes {
     | '/'
     | '/customers'
     | '/editions'
+    | '/lookups'
     | '/negatives'
     | '/orders'
     | '/prints'
-    | '/settings'
     | '/customers/$id'
-    | '/settings/customer-types'
-    | '/settings/developers'
-    | '/settings/film-stocks'
-    | '/settings/manufacturers'
-    | '/settings/paper-stocks'
+    | '/lookups/customer-types'
+    | '/lookups/developers'
+    | '/lookups/film-stocks'
+    | '/lookups/manufacturers'
+    | '/lookups/paper-stocks'
     | '/customers/'
-    | '/settings/'
+    | '/lookups/'
     | '/customers/$id/notes'
     | '/customers/$id/orders'
     | '/customers/$id/'
@@ -241,21 +241,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CustomersRoute: typeof CustomersRouteWithChildren
   EditionsRoute: typeof EditionsRoute
+  LookupsRoute: typeof LookupsRouteWithChildren
   NegativesRoute: typeof NegativesRoute
   OrdersRoute: typeof OrdersRoute
   PrintsRoute: typeof PrintsRoute
-  SettingsRoute: typeof SettingsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/prints': {
       id: '/prints'
       path: '/prints'
@@ -275,6 +268,13 @@ declare module '@tanstack/react-router' {
       path: '/negatives'
       fullPath: '/negatives'
       preLoaderRoute: typeof NegativesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lookups': {
+      id: '/lookups'
+      path: '/lookups'
+      fullPath: '/lookups'
+      preLoaderRoute: typeof LookupsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/editions': {
@@ -298,12 +298,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/settings/': {
-      id: '/settings/'
+    '/lookups/': {
+      id: '/lookups/'
       path: '/'
-      fullPath: '/settings/'
-      preLoaderRoute: typeof SettingsIndexRouteImport
-      parentRoute: typeof SettingsRoute
+      fullPath: '/lookups/'
+      preLoaderRoute: typeof LookupsIndexRouteImport
+      parentRoute: typeof LookupsRoute
     }
     '/customers/': {
       id: '/customers/'
@@ -312,40 +312,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomersIndexRouteImport
       parentRoute: typeof CustomersRoute
     }
-    '/settings/paper-stocks': {
-      id: '/settings/paper-stocks'
+    '/lookups/paper-stocks': {
+      id: '/lookups/paper-stocks'
       path: '/paper-stocks'
-      fullPath: '/settings/paper-stocks'
-      preLoaderRoute: typeof SettingsPaperStocksRouteImport
-      parentRoute: typeof SettingsRoute
+      fullPath: '/lookups/paper-stocks'
+      preLoaderRoute: typeof LookupsPaperStocksRouteImport
+      parentRoute: typeof LookupsRoute
     }
-    '/settings/manufacturers': {
-      id: '/settings/manufacturers'
+    '/lookups/manufacturers': {
+      id: '/lookups/manufacturers'
       path: '/manufacturers'
-      fullPath: '/settings/manufacturers'
-      preLoaderRoute: typeof SettingsManufacturersRouteImport
-      parentRoute: typeof SettingsRoute
+      fullPath: '/lookups/manufacturers'
+      preLoaderRoute: typeof LookupsManufacturersRouteImport
+      parentRoute: typeof LookupsRoute
     }
-    '/settings/film-stocks': {
-      id: '/settings/film-stocks'
+    '/lookups/film-stocks': {
+      id: '/lookups/film-stocks'
       path: '/film-stocks'
-      fullPath: '/settings/film-stocks'
-      preLoaderRoute: typeof SettingsFilmStocksRouteImport
-      parentRoute: typeof SettingsRoute
+      fullPath: '/lookups/film-stocks'
+      preLoaderRoute: typeof LookupsFilmStocksRouteImport
+      parentRoute: typeof LookupsRoute
     }
-    '/settings/developers': {
-      id: '/settings/developers'
+    '/lookups/developers': {
+      id: '/lookups/developers'
       path: '/developers'
-      fullPath: '/settings/developers'
-      preLoaderRoute: typeof SettingsDevelopersRouteImport
-      parentRoute: typeof SettingsRoute
+      fullPath: '/lookups/developers'
+      preLoaderRoute: typeof LookupsDevelopersRouteImport
+      parentRoute: typeof LookupsRoute
     }
-    '/settings/customer-types': {
-      id: '/settings/customer-types'
+    '/lookups/customer-types': {
+      id: '/lookups/customer-types'
       path: '/customer-types'
-      fullPath: '/settings/customer-types'
-      preLoaderRoute: typeof SettingsCustomerTypesRouteImport
-      parentRoute: typeof SettingsRoute
+      fullPath: '/lookups/customer-types'
+      preLoaderRoute: typeof LookupsCustomerTypesRouteImport
+      parentRoute: typeof LookupsRoute
     }
     '/customers/$id': {
       id: '/customers/$id'
@@ -408,36 +408,35 @@ const CustomersRouteWithChildren = CustomersRoute._addFileChildren(
   CustomersRouteChildren,
 )
 
-interface SettingsRouteChildren {
-  SettingsCustomerTypesRoute: typeof SettingsCustomerTypesRoute
-  SettingsDevelopersRoute: typeof SettingsDevelopersRoute
-  SettingsFilmStocksRoute: typeof SettingsFilmStocksRoute
-  SettingsManufacturersRoute: typeof SettingsManufacturersRoute
-  SettingsPaperStocksRoute: typeof SettingsPaperStocksRoute
-  SettingsIndexRoute: typeof SettingsIndexRoute
+interface LookupsRouteChildren {
+  LookupsCustomerTypesRoute: typeof LookupsCustomerTypesRoute
+  LookupsDevelopersRoute: typeof LookupsDevelopersRoute
+  LookupsFilmStocksRoute: typeof LookupsFilmStocksRoute
+  LookupsManufacturersRoute: typeof LookupsManufacturersRoute
+  LookupsPaperStocksRoute: typeof LookupsPaperStocksRoute
+  LookupsIndexRoute: typeof LookupsIndexRoute
 }
 
-const SettingsRouteChildren: SettingsRouteChildren = {
-  SettingsCustomerTypesRoute: SettingsCustomerTypesRoute,
-  SettingsDevelopersRoute: SettingsDevelopersRoute,
-  SettingsFilmStocksRoute: SettingsFilmStocksRoute,
-  SettingsManufacturersRoute: SettingsManufacturersRoute,
-  SettingsPaperStocksRoute: SettingsPaperStocksRoute,
-  SettingsIndexRoute: SettingsIndexRoute,
+const LookupsRouteChildren: LookupsRouteChildren = {
+  LookupsCustomerTypesRoute: LookupsCustomerTypesRoute,
+  LookupsDevelopersRoute: LookupsDevelopersRoute,
+  LookupsFilmStocksRoute: LookupsFilmStocksRoute,
+  LookupsManufacturersRoute: LookupsManufacturersRoute,
+  LookupsPaperStocksRoute: LookupsPaperStocksRoute,
+  LookupsIndexRoute: LookupsIndexRoute,
 }
 
-const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
-  SettingsRouteChildren,
-)
+const LookupsRouteWithChildren =
+  LookupsRoute._addFileChildren(LookupsRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CustomersRoute: CustomersRouteWithChildren,
   EditionsRoute: EditionsRoute,
+  LookupsRoute: LookupsRouteWithChildren,
   NegativesRoute: NegativesRoute,
   OrdersRoute: OrdersRoute,
   PrintsRoute: PrintsRoute,
-  SettingsRoute: SettingsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

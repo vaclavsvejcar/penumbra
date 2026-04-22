@@ -12,19 +12,19 @@ import {
   LookupSearch,
   useLookupAdmin,
 } from '#/components/lookup'
-import type { Manufacturer } from '#/db/schema'
+import type { CustomerType } from '#/db/schema'
 import { cn } from '#/lib/utils'
 import {
-  archiveManufacturer,
-  createManufacturer,
-  listAllManufacturers,
-  unarchiveManufacturer,
-  updateManufacturer,
-} from '#/server/manufacturers'
+  archiveCustomerType,
+  createCustomerType,
+  listAllCustomerTypes,
+  unarchiveCustomerType,
+  updateCustomerType,
+} from '#/server/customerTypes'
 
-export const Route = createFileRoute('/settings/manufacturers')({
-  component: ManufacturersAdmin,
-  loader: () => listAllManufacturers(),
+export const Route = createFileRoute('/lookups/customer-types')({
+  component: CustomerTypesAdmin,
+  loader: () => listAllCustomerTypes(),
 })
 
 const fade = {
@@ -36,22 +36,22 @@ const fade = {
   },
 }
 
-function ManufacturersAdmin() {
+function CustomerTypesAdmin() {
   const rows = Route.useLoaderData()
   const admin = useLookupAdmin({
     rows,
     matchesQuery: (r, q) =>
       r.label.toLowerCase().includes(q) || r.code.toLowerCase().includes(q),
-    archiveFn: archiveManufacturer,
-    unarchiveFn: unarchiveManufacturer,
+    archiveFn: archiveCustomerType,
+    unarchiveFn: unarchiveCustomerType,
   })
 
   return (
     <motion.div initial="hidden" animate="visible" variants={fade}>
       <LookupHeader
-        title="Manufacturers"
-        description="Brands of film, paper, and chemistry. Shared across the whole archive — a manufacturer like Kodak appears wherever it's offered."
-        addLabel="Add manufacturer"
+        title="Customer types"
+        description="Displayed when creating or editing a customer. Archived types stay on existing customers but disappear from selection lists."
+        addLabel="Add type"
         onAdd={admin.startCreating}
         addDisabled={admin.creating || admin.busy}
       />
@@ -65,7 +65,7 @@ function ManufacturersAdmin() {
       <LookupSearch
         value={admin.query}
         onChange={admin.setQuery}
-        placeholder="Find a manufacturer…"
+        placeholder="Find a type…"
         total={rows.length}
         filtered={admin.filtered.length}
       />
@@ -77,30 +77,30 @@ function ManufacturersAdmin() {
         onClearQuery={admin.clearQuery}
         creating={admin.creating}
         editingId={admin.editingId}
-        emptyMessage="No manufacturers defined yet."
+        emptyMessage="No customer types defined yet."
         renderNewRow={() => (
-          <NewRow
+          <NewTypeRow
             existingOrders={rows.map((r) => r.sortOrder)}
             onCancel={admin.cancelCreating}
             onSaved={admin.reloadAfterSave}
             onError={admin.setError}
           />
         )}
-        renderEditRow={(m) => (
-          <EditRow
-            manufacturer={m}
+        renderEditRow={(t) => (
+          <EditTypeRow
+            type={t}
             onCancel={admin.cancelEditing}
             onSaved={admin.reloadAfterSave}
             onError={admin.setError}
           />
         )}
-        renderDisplayRow={(m) => (
+        renderDisplayRow={(t) => (
           <DisplayRow
-            manufacturer={m}
+            type={t}
             busy={admin.busy}
-            onEdit={() => admin.startEditing(m.id)}
-            onArchive={() => admin.handleArchive(m.id)}
-            onUnarchive={() => admin.handleUnarchive(m.id)}
+            onEdit={() => admin.startEditing(t.id)}
+            onArchive={() => admin.handleArchive(t.id)}
+            onUnarchive={() => admin.handleUnarchive(t.id)}
           />
         )}
       />
@@ -109,19 +109,19 @@ function ManufacturersAdmin() {
 }
 
 function DisplayRow({
-  manufacturer,
+  type,
   busy,
   onEdit,
   onArchive,
   onUnarchive,
 }: {
-  manufacturer: Manufacturer
+  type: CustomerType
   busy: boolean
   onEdit: () => void
   onArchive: () => void
   onUnarchive: () => void
 }) {
-  const archived = manufacturer.archivedAt !== null
+  const archived = type.archivedAt !== null
   return (
     <div
       className={cn(
@@ -130,11 +130,9 @@ function DisplayRow({
       )}
     >
       <div className="min-w-0">
-        <p className="text-ink truncate text-sm font-medium">
-          {manufacturer.label}
-        </p>
+        <p className="text-ink truncate text-sm font-medium">{type.label}</p>
         <p className="text-ink-muted truncate font-mono text-xs tabular-nums">
-          {manufacturer.code}
+          {type.code}
         </p>
       </div>
       {archived ? (
@@ -148,10 +146,10 @@ function DisplayRow({
         <span />
       )}
       <span className="text-ink-muted text-right font-mono text-xs tabular-nums">
-        {manufacturer.sortOrder}
+        {type.sortOrder}
       </span>
       <LookupRowActions
-        label={manufacturer.label}
+        label={type.label}
         archived={archived}
         busy={busy}
         onEdit={onEdit}
@@ -162,7 +160,7 @@ function DisplayRow({
   )
 }
 
-function NewRow({
+function NewTypeRow({
   existingOrders,
   onCancel,
   onSaved,
@@ -184,14 +182,12 @@ function NewRow({
     if (!label.trim()) return
     setSaving(true)
     try {
-      await createManufacturer({
+      await createCustomerType({
         data: { label, code: code.trim() || undefined, sortOrder },
       })
       await onSaved()
     } catch (err) {
-      onError(
-        err instanceof Error ? err.message : 'Could not create manufacturer.',
-      )
+      onError(err instanceof Error ? err.message : 'Could not create type.')
     } finally {
       setSaving(false)
     }
@@ -213,34 +209,32 @@ function NewRow({
   )
 }
 
-function EditRow({
-  manufacturer,
+function EditTypeRow({
+  type,
   onCancel,
   onSaved,
   onError,
 }: {
-  manufacturer: Manufacturer
+  type: CustomerType
   onCancel: () => void
   onSaved: () => void | Promise<void>
   onError: (msg: string) => void
 }) {
-  const [label, setLabel] = useState(manufacturer.label)
-  const [code, setCode] = useState(manufacturer.code)
-  const [sortOrder, setSortOrder] = useState(manufacturer.sortOrder)
+  const [label, setLabel] = useState(type.label)
+  const [code, setCode] = useState(type.code)
+  const [sortOrder, setSortOrder] = useState(type.sortOrder)
   const [saving, setSaving] = useState(false)
 
   async function save() {
     if (!label.trim()) return
     setSaving(true)
     try {
-      await updateManufacturer({
-        data: { id: manufacturer.id, label, code, sortOrder },
+      await updateCustomerType({
+        data: { id: type.id, label, code, sortOrder },
       })
       await onSaved()
     } catch (err) {
-      onError(
-        err instanceof Error ? err.message : 'Could not save manufacturer.',
-      )
+      onError(err instanceof Error ? err.message : 'Could not save type.')
     } finally {
       setSaving(false)
     }
@@ -298,18 +292,18 @@ function FormRow({
   return (
     <div className="flex flex-wrap items-end gap-3 py-3 sm:gap-4">
       <div className="grid flex-1 grid-cols-[1fr_1fr_6rem] items-end gap-3 sm:gap-4">
-        <FieldWrap htmlFor="mfg-label" label="Label">
+        <FieldWrap htmlFor="ct-label" label="Label">
           <Input
-            id="mfg-label"
+            id="ct-label"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             autoFocus
             onKeyDown={onKeyDown}
           />
         </FieldWrap>
-        <FieldWrap htmlFor="mfg-code" label="Code">
+        <FieldWrap htmlFor="ct-code" label="Code">
           <Input
-            id="mfg-code"
+            id="ct-code"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             placeholder="auto from label"
@@ -317,9 +311,9 @@ function FormRow({
             onKeyDown={onKeyDown}
           />
         </FieldWrap>
-        <FieldWrap htmlFor="mfg-sort" label="Sort">
+        <FieldWrap htmlFor="ct-sort" label="Sort">
           <Input
-            id="mfg-sort"
+            id="ct-sort"
             type="number"
             value={sortOrder}
             onChange={(e) => setSortOrder(Number(e.target.value))}

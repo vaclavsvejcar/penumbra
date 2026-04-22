@@ -96,8 +96,8 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
           <NavItem to="/orders" label="Orders" onNavigate={onNavigate} />
         </NavGroup>
 
-        <NavGroup label="Workshop">
-          <NavItem to="/settings" label="Settings" onNavigate={onNavigate} />
+        <NavGroup label="Settings">
+          <NavItem to="/lookups" label="Lookups" onNavigate={onNavigate} />
         </NavGroup>
       </div>
 

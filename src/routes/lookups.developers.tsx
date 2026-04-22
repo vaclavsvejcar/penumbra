@@ -37,7 +37,7 @@ import {
 } from '#/server/developers'
 import { listManufacturers } from '#/server/manufacturers'
 
-export const Route = createFileRoute('/settings/developers')({
+export const Route = createFileRoute('/lookups/developers')({
   component: DevelopersAdmin,
   loader: async () => ({
     developers: await listAllDevelopers(),

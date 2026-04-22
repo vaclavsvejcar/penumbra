@@ -12,19 +12,19 @@ import {
   LookupSearch,
   useLookupAdmin,
 } from '#/components/lookup'
-import type { CustomerType } from '#/db/schema'
+import type { Manufacturer } from '#/db/schema'
 import { cn } from '#/lib/utils'
 import {
-  archiveCustomerType,
-  createCustomerType,
-  listAllCustomerTypes,
-  unarchiveCustomerType,
-  updateCustomerType,
-} from '#/server/customerTypes'
+  archiveManufacturer,
+  createManufacturer,
+  listAllManufacturers,
+  unarchiveManufacturer,
+  updateManufacturer,
+} from '#/server/manufacturers'
 
-export const Route = createFileRoute('/settings/customer-types')({
-  component: CustomerTypesAdmin,
-  loader: () => listAllCustomerTypes(),
+export const Route = createFileRoute('/lookups/manufacturers')({
+  component: ManufacturersAdmin,
+  loader: () => listAllManufacturers(),
 })
 
 const fade = {
@@ -36,22 +36,22 @@ const fade = {
   },
 }
 
-function CustomerTypesAdmin() {
+function ManufacturersAdmin() {
   const rows = Route.useLoaderData()
   const admin = useLookupAdmin({
     rows,
     matchesQuery: (r, q) =>
       r.label.toLowerCase().includes(q) || r.code.toLowerCase().includes(q),
-    archiveFn: archiveCustomerType,
-    unarchiveFn: unarchiveCustomerType,
+    archiveFn: archiveManufacturer,
+    unarchiveFn: unarchiveManufacturer,
   })
 
   return (
     <motion.div initial="hidden" animate="visible" variants={fade}>
       <LookupHeader
-        title="Customer types"
-        description="Displayed when creating or editing a customer. Archived types stay on existing customers but disappear from selection lists."
-        addLabel="Add type"
+        title="Manufacturers"
+        description="Brands of film, paper, and chemistry. Shared across the whole archive — a manufacturer like Kodak appears wherever it's offered."
+        addLabel="Add manufacturer"
         onAdd={admin.startCreating}
         addDisabled={admin.creating || admin.busy}
       />
@@ -65,7 +65,7 @@ function CustomerTypesAdmin() {
       <LookupSearch
         value={admin.query}
         onChange={admin.setQuery}
-        placeholder="Find a type…"
+        placeholder="Find a manufacturer…"
         total={rows.length}
         filtered={admin.filtered.length}
       />
@@ -77,30 +77,30 @@ function CustomerTypesAdmin() {
         onClearQuery={admin.clearQuery}
         creating={admin.creating}
         editingId={admin.editingId}
-        emptyMessage="No customer types defined yet."
+        emptyMessage="No manufacturers defined yet."
         renderNewRow={() => (
-          <NewTypeRow
+          <NewRow
             existingOrders={rows.map((r) => r.sortOrder)}
             onCancel={admin.cancelCreating}
             onSaved={admin.reloadAfterSave}
             onError={admin.setError}
           />
         )}
-        renderEditRow={(t) => (
-          <EditTypeRow
-            type={t}
+        renderEditRow={(m) => (
+          <EditRow
+            manufacturer={m}
             onCancel={admin.cancelEditing}
             onSaved={admin.reloadAfterSave}
             onError={admin.setError}
           />
         )}
-        renderDisplayRow={(t) => (
+        renderDisplayRow={(m) => (
           <DisplayRow
-            type={t}
+            manufacturer={m}
             busy={admin.busy}
-            onEdit={() => admin.startEditing(t.id)}
-            onArchive={() => admin.handleArchive(t.id)}
-            onUnarchive={() => admin.handleUnarchive(t.id)}
+            onEdit={() => admin.startEditing(m.id)}
+            onArchive={() => admin.handleArchive(m.id)}
+            onUnarchive={() => admin.handleUnarchive(m.id)}
           />
         )}
       />
@@ -109,19 +109,19 @@ function CustomerTypesAdmin() {
 }
 
 function DisplayRow({
-  type,
+  manufacturer,
   busy,
   onEdit,
   onArchive,
   onUnarchive,
 }: {
-  type: CustomerType
+  manufacturer: Manufacturer
   busy: boolean
   onEdit: () => void
   onArchive: () => void
   onUnarchive: () => void
 }) {
-  const archived = type.archivedAt !== null
+  const archived = manufacturer.archivedAt !== null
   return (
     <div
       className={cn(
@@ -130,9 +130,11 @@ function DisplayRow({
       )}
     >
       <div className="min-w-0">
-        <p className="text-ink truncate text-sm font-medium">{type.label}</p>
+        <p className="text-ink truncate text-sm font-medium">
+          {manufacturer.label}
+        </p>
         <p className="text-ink-muted truncate font-mono text-xs tabular-nums">
-          {type.code}
+          {manufacturer.code}
         </p>
       </div>
       {archived ? (
@@ -146,10 +148,10 @@ function DisplayRow({
         <span />
       )}
       <span className="text-ink-muted text-right font-mono text-xs tabular-nums">
-        {type.sortOrder}
+        {manufacturer.sortOrder}
       </span>
       <LookupRowActions
-        label={type.label}
+        label={manufacturer.label}
         archived={archived}
         busy={busy}
         onEdit={onEdit}
@@ -160,7 +162,7 @@ function DisplayRow({
   )
 }
 
-function NewTypeRow({
+function NewRow({
   existingOrders,
   onCancel,
   onSaved,
@@ -182,12 +184,14 @@ function NewTypeRow({
     if (!label.trim()) return
     setSaving(true)
     try {
-      await createCustomerType({
+      await createManufacturer({
         data: { label, code: code.trim() || undefined, sortOrder },
       })
       await onSaved()
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Could not create type.')
+      onError(
+        err instanceof Error ? err.message : 'Could not create manufacturer.',
+      )
     } finally {
       setSaving(false)
     }
@@ -209,32 +213,34 @@ function NewTypeRow({
   )
 }
 
-function EditTypeRow({
-  type,
+function EditRow({
+  manufacturer,
   onCancel,
   onSaved,
   onError,
 }: {
-  type: CustomerType
+  manufacturer: Manufacturer
   onCancel: () => void
   onSaved: () => void | Promise<void>
   onError: (msg: string) => void
 }) {
-  const [label, setLabel] = useState(type.label)
-  const [code, setCode] = useState(type.code)
-  const [sortOrder, setSortOrder] = useState(type.sortOrder)
+  const [label, setLabel] = useState(manufacturer.label)
+  const [code, setCode] = useState(manufacturer.code)
+  const [sortOrder, setSortOrder] = useState(manufacturer.sortOrder)
   const [saving, setSaving] = useState(false)
 
   async function save() {
     if (!label.trim()) return
     setSaving(true)
     try {
-      await updateCustomerType({
-        data: { id: type.id, label, code, sortOrder },
+      await updateManufacturer({
+        data: { id: manufacturer.id, label, code, sortOrder },
       })
       await onSaved()
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Could not save type.')
+      onError(
+        err instanceof Error ? err.message : 'Could not save manufacturer.',
+      )
     } finally {
       setSaving(false)
     }
@@ -292,18 +298,18 @@ function FormRow({
   return (
     <div className="flex flex-wrap items-end gap-3 py-3 sm:gap-4">
       <div className="grid flex-1 grid-cols-[1fr_1fr_6rem] items-end gap-3 sm:gap-4">
-        <FieldWrap htmlFor="ct-label" label="Label">
+        <FieldWrap htmlFor="mfg-label" label="Label">
           <Input
-            id="ct-label"
+            id="mfg-label"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             autoFocus
             onKeyDown={onKeyDown}
           />
         </FieldWrap>
-        <FieldWrap htmlFor="ct-code" label="Code">
+        <FieldWrap htmlFor="mfg-code" label="Code">
           <Input
-            id="ct-code"
+            id="mfg-code"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             placeholder="auto from label"
@@ -311,9 +317,9 @@ function FormRow({
             onKeyDown={onKeyDown}
           />
         </FieldWrap>
-        <FieldWrap htmlFor="ct-sort" label="Sort">
+        <FieldWrap htmlFor="mfg-sort" label="Sort">
           <Input
-            id="ct-sort"
+            id="mfg-sort"
             type="number"
             value={sortOrder}
             onChange={(e) => setSortOrder(Number(e.target.value))}
