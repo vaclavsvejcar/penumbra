@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm'
 import {
+  check,
   integer,
   sqliteTable,
   text,
@@ -206,4 +207,109 @@ export type NewCustomer = typeof customers.$inferInsert
 
 export type CustomerWithType = Customer & {
   customerType: Pick<CustomerType, 'id' | 'code' | 'label'>
+}
+
+export const negatives = sqliteTable(
+  'negatives',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    seqGlobal: integer('seq_global').notNull().unique(),
+    year: integer('year').notNull(),
+    seqYear: integer('seq_year').notNull(),
+    filmStockId: integer('film_stock_id')
+      .notNull()
+      .references(() => filmStocks.id, { onDelete: 'restrict' }),
+    developerId: integer('developer_id').references(() => developers.id, {
+      onDelete: 'restrict',
+    }),
+    developedAt: integer('developed_at', { mode: 'timestamp' }).notNull(),
+    devNotes: text('dev_notes'),
+    archivedAt: integer('archived_at', { mode: 'timestamp' }),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    updatedAt: integer('updated_at', { mode: 'timestamp' })
+      .notNull()
+      .default(sql`(unixepoch())`)
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [uniqueIndex('negatives_year_seq_unique').on(t.year, t.seqYear)],
+)
+
+export type Negative = typeof negatives.$inferSelect
+export type NewNegative = typeof negatives.$inferInsert
+
+export type NegativeFilmStock = Pick<
+  FilmStock,
+  'id' | 'code' | 'label' | 'iso' | 'type' | 'process'
+> & {
+  manufacturer: Pick<Manufacturer, 'id' | 'code' | 'label'>
+}
+
+export type NegativeDeveloper = Pick<Developer, 'id' | 'code' | 'label'> & {
+  manufacturer: Pick<Manufacturer, 'id' | 'code' | 'label'>
+}
+
+export type NegativeWithRefs = Negative & {
+  filmStock: NegativeFilmStock
+  developer: NegativeDeveloper | null
+  frameCount: number
+  keeperCount: number
+}
+
+export const frames = sqliteTable(
+  'frames',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    negativeId: integer('negative_id')
+      .notNull()
+      .references(() => negatives.id, { onDelete: 'restrict' }),
+    frameNumber: integer('frame_number').notNull(),
+    subject: text('subject'),
+    dateShot: integer('date_shot', { mode: 'timestamp' }),
+    keeper: integer('keeper', { mode: 'boolean' }).notNull().default(false),
+    notes: text('notes'),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    updatedAt: integer('updated_at', { mode: 'timestamp' })
+      .notNull()
+      .default(sql`(unixepoch())`)
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    uniqueIndex('frames_negative_number_unique').on(
+      t.negativeId,
+      t.frameNumber,
+    ),
+    check('frames_number_range', sql`${t.frameNumber} BETWEEN 1 AND 36`),
+  ],
+)
+
+export type Frame = typeof frames.$inferSelect
+export type NewFrame = typeof frames.$inferInsert
+
+export type FrameWithNegative = Frame & {
+  negative: Pick<Negative, 'id' | 'seqGlobal' | 'year' | 'seqYear'>
+}
+
+export type NegativeSearchItem = Pick<
+  Negative,
+  | 'id'
+  | 'seqGlobal'
+  | 'year'
+  | 'seqYear'
+  | 'developedAt'
+  | 'archivedAt'
+  | 'devNotes'
+> & {
+  filmStock: NegativeFilmStock
+  developer: NegativeDeveloper | null
+}
+
+export type FrameSearchItem = Pick<
+  Frame,
+  'id' | 'frameNumber' | 'subject' | 'dateShot' | 'keeper' | 'notes'
+> & {
+  negative: Pick<Negative, 'id' | 'seqGlobal' | 'year' | 'seqYear'>
 }

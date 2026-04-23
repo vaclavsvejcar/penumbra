@@ -64,6 +64,13 @@ function targetForItem(item: SearchItem): NavTarget {
       return { to: '/lookups/paper-stocks', search: { focus: item.id } }
     case 'developer':
       return { to: '/lookups/developers', search: { focus: item.id } }
+    case 'negative':
+      return { to: `/negatives/${item.id}`, search: {} }
+    case 'frame':
+      return {
+        to: `/negatives/${item.data.negative.id}`,
+        search: { focus: item.id },
+      }
   }
 }
 

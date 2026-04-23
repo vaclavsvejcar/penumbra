@@ -6,6 +6,8 @@ import { ManufacturerPreview } from './previews/ManufacturerPreview'
 import { FilmStockPreview } from './previews/FilmStockPreview'
 import { PaperStockPreview } from './previews/PaperStockPreview'
 import { DeveloperPreview } from './previews/DeveloperPreview'
+import { NegativePreview } from './previews/NegativePreview'
+import { FramePreview } from './previews/FramePreview'
 
 type Props = { item: SearchItem | null }
 
@@ -35,5 +37,9 @@ export function SearchPreviewPane({ item }: Props) {
       return <PaperStockPreview item={item} />
     case 'developer':
       return <DeveloperPreview item={item} />
+    case 'negative':
+      return <NegativePreview item={item} />
+    case 'frame':
+      return <FramePreview item={item} />
   }
 }

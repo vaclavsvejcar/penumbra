@@ -1,15 +1,26 @@
 import { createServerFn } from '@tanstack/react-start'
-import { asc, eq, isNull } from 'drizzle-orm'
+import { asc, desc, eq, isNull } from 'drizzle-orm'
+import { alias } from 'drizzle-orm/sqlite-core'
 import { db } from '#/db/client'
 import {
   customerTypes,
   customers,
   developers,
   filmStocks,
+  frames,
   manufacturers,
+  negatives,
   paperStocks,
 } from '#/db/schema'
+import {
+  frameDisplayId,
+  negativeDisplayId,
+  paddedFrameNumber,
+} from '#/lib/negative-id'
 import type { SearchItem } from '#/lib/search/types'
+
+const filmManufacturers = alias(manufacturers, 'film_manufacturers')
+const devManufacturers = alias(manufacturers, 'dev_manufacturers')
 
 function norm(...parts: Array<string | null | undefined | number>): string {
   return parts
@@ -27,6 +38,8 @@ export const listSearchIndex = createServerFn({ method: 'GET' }).handler(
       filmRows,
       paperRows,
       developerRows,
+      negativeRows,
+      frameRows,
     ] = await Promise.all([
       db
         .select({ customer: customers, customerType: customerTypes })
@@ -69,6 +82,35 @@ export const listSearchIndex = createServerFn({ method: 'GET' }).handler(
         .innerJoin(manufacturers, eq(developers.manufacturerId, manufacturers.id))
         .where(isNull(developers.archivedAt))
         .orderBy(asc(developers.sortOrder), asc(developers.label))
+        .all(),
+      db
+        .select({
+          negative: negatives,
+          filmStock: filmStocks,
+          filmManufacturer: filmManufacturers,
+          developer: developers,
+          devManufacturer: devManufacturers,
+        })
+        .from(negatives)
+        .innerJoin(filmStocks, eq(negatives.filmStockId, filmStocks.id))
+        .innerJoin(
+          filmManufacturers,
+          eq(filmStocks.manufacturerId, filmManufacturers.id),
+        )
+        .leftJoin(developers, eq(negatives.developerId, developers.id))
+        .leftJoin(
+          devManufacturers,
+          eq(developers.manufacturerId, devManufacturers.id),
+        )
+        .where(isNull(negatives.archivedAt))
+        .orderBy(desc(negatives.seqGlobal))
+        .all(),
+      db
+        .select({ frame: frames, negative: negatives })
+        .from(frames)
+        .innerJoin(negatives, eq(frames.negativeId, negatives.id))
+        .where(isNull(negatives.archivedAt))
+        .orderBy(desc(negatives.seqGlobal), asc(frames.frameNumber))
         .all(),
     ])
 
@@ -194,6 +236,98 @@ export const listSearchIndex = createServerFn({ method: 'GET' }).handler(
         data: {
           ...d,
           manufacturer: { id: m.id, code: m.code, label: m.label },
+        },
+      })
+    }
+
+    for (const row of negativeRows) {
+      const n = row.negative
+      const fs = row.filmStock
+      const fm = row.filmManufacturer
+      const d = row.developer
+      const dm = row.devManufacturer
+      const display = negativeDisplayId(n)
+      items.push({
+        type: 'negative',
+        id: n.id,
+        title: display,
+        kicker: 'Roll',
+        subtitle: `${fm.label} ${fs.label} · ISO ${fs.iso}`,
+        searchText: norm(
+          display,
+          String(n.seqGlobal),
+          `${n.year}`,
+          fm.label,
+          fm.code,
+          fs.label,
+          fs.code,
+          d?.label,
+          d?.code,
+          dm?.label,
+          n.devNotes,
+        ),
+        data: {
+          id: n.id,
+          seqGlobal: n.seqGlobal,
+          year: n.year,
+          seqYear: n.seqYear,
+          developedAt: n.developedAt,
+          archivedAt: n.archivedAt,
+          devNotes: n.devNotes,
+          filmStock: {
+            id: fs.id,
+            code: fs.code,
+            label: fs.label,
+            iso: fs.iso,
+            type: fs.type,
+            process: fs.process,
+            manufacturer: { id: fm.id, code: fm.code, label: fm.label },
+          },
+          developer:
+            d && dm
+              ? {
+                  id: d.id,
+                  code: d.code,
+                  label: d.label,
+                  manufacturer: { id: dm.id, code: dm.code, label: dm.label },
+                }
+              : null,
+        },
+      })
+    }
+
+    for (const row of frameRows) {
+      const f = row.frame
+      const n = row.negative
+      const display = frameDisplayId(n, f)
+      const title = f.subject ?? `Frame ${paddedFrameNumber(f)}`
+      items.push({
+        type: 'frame',
+        id: f.id,
+        title,
+        kicker: display,
+        subtitle: f.keeper ? 'Keeper' : undefined,
+        searchText: norm(
+          display,
+          `frame${f.frameNumber}`,
+          f.subject,
+          f.notes,
+          negativeDisplayId(n),
+          f.keeper ? 'keeper' : null,
+        ),
+        data: {
+          id: f.id,
+          frameNumber: f.frameNumber,
+          subject: f.subject,
+          dateShot: f.dateShot,
+          keeper: f.keeper,
+          notes: f.notes,
+          negative: {
+            id: n.id,
+            seqGlobal: n.seqGlobal,
+            year: n.year,
+            seqYear: n.seqYear,
+          },
         },
       })
     }

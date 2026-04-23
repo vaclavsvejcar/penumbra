@@ -6,7 +6,9 @@ import type {
   DeveloperWithManufacturer,
   FilmStock,
   FilmStockWithManufacturer,
+  FrameSearchItem,
   Manufacturer,
+  NegativeSearchItem,
   PaperStock,
   PaperStockWithManufacturer,
 } from '#/db/schema'
@@ -80,6 +82,24 @@ export type SearchItem =
       searchText: string
       data: DeveloperWithManufacturer
     }
+  | {
+      type: 'negative'
+      id: number
+      title: string
+      kicker: string
+      subtitle?: string
+      searchText: string
+      data: NegativeSearchItem
+    }
+  | {
+      type: 'frame'
+      id: number
+      title: string
+      kicker: string
+      subtitle?: string
+      searchText: string
+      data: FrameSearchItem
+    }
 
 export type SearchItemType = SearchItem['type']
 
@@ -115,7 +135,9 @@ export type {
   DeveloperWithManufacturer,
   FilmStock,
   FilmStockWithManufacturer,
+  FrameSearchItem,
   Manufacturer,
+  NegativeSearchItem,
   PaperStock,
   PaperStockWithManufacturer,
 }

@@ -17,8 +17,10 @@ import { Route as LookupsRouteImport } from './routes/lookups'
 import { Route as EditionsRouteImport } from './routes/editions'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as NegativesIndexRouteImport } from './routes/negatives.index'
 import { Route as LookupsIndexRouteImport } from './routes/lookups.index'
 import { Route as CustomersIndexRouteImport } from './routes/customers.index'
+import { Route as NegativesIdRouteImport } from './routes/negatives.$id'
 import { Route as LookupsPaperStocksRouteImport } from './routes/lookups.paper-stocks'
 import { Route as LookupsManufacturersRouteImport } from './routes/lookups.manufacturers'
 import { Route as LookupsFilmStocksRouteImport } from './routes/lookups.film-stocks'
@@ -69,6 +71,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NegativesIndexRoute = NegativesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => NegativesRoute,
+} as any)
 const LookupsIndexRoute = LookupsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -78,6 +85,11 @@ const CustomersIndexRoute = CustomersIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => CustomersRoute,
+} as any)
+const NegativesIdRoute = NegativesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => NegativesRoute,
 } as any)
 const LookupsPaperStocksRoute = LookupsPaperStocksRouteImport.update({
   id: '/paper-stocks',
@@ -130,7 +142,7 @@ export interface FileRoutesByFullPath {
   '/customers': typeof CustomersRouteWithChildren
   '/editions': typeof EditionsRoute
   '/lookups': typeof LookupsRouteWithChildren
-  '/negatives': typeof NegativesRoute
+  '/negatives': typeof NegativesRouteWithChildren
   '/orders': typeof OrdersRoute
   '/prints': typeof PrintsRoute
   '/storage': typeof StorageRoute
@@ -140,8 +152,10 @@ export interface FileRoutesByFullPath {
   '/lookups/film-stocks': typeof LookupsFilmStocksRoute
   '/lookups/manufacturers': typeof LookupsManufacturersRoute
   '/lookups/paper-stocks': typeof LookupsPaperStocksRoute
+  '/negatives/$id': typeof NegativesIdRoute
   '/customers/': typeof CustomersIndexRoute
   '/lookups/': typeof LookupsIndexRoute
+  '/negatives/': typeof NegativesIndexRoute
   '/customers/$id/notes': typeof CustomersIdNotesRoute
   '/customers/$id/orders': typeof CustomersIdOrdersRoute
   '/customers/$id/': typeof CustomersIdIndexRoute
@@ -149,7 +163,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/editions': typeof EditionsRoute
-  '/negatives': typeof NegativesRoute
   '/orders': typeof OrdersRoute
   '/prints': typeof PrintsRoute
   '/storage': typeof StorageRoute
@@ -158,8 +171,10 @@ export interface FileRoutesByTo {
   '/lookups/film-stocks': typeof LookupsFilmStocksRoute
   '/lookups/manufacturers': typeof LookupsManufacturersRoute
   '/lookups/paper-stocks': typeof LookupsPaperStocksRoute
+  '/negatives/$id': typeof NegativesIdRoute
   '/customers': typeof CustomersIndexRoute
   '/lookups': typeof LookupsIndexRoute
+  '/negatives': typeof NegativesIndexRoute
   '/customers/$id/notes': typeof CustomersIdNotesRoute
   '/customers/$id/orders': typeof CustomersIdOrdersRoute
   '/customers/$id': typeof CustomersIdIndexRoute
@@ -170,7 +185,7 @@ export interface FileRoutesById {
   '/customers': typeof CustomersRouteWithChildren
   '/editions': typeof EditionsRoute
   '/lookups': typeof LookupsRouteWithChildren
-  '/negatives': typeof NegativesRoute
+  '/negatives': typeof NegativesRouteWithChildren
   '/orders': typeof OrdersRoute
   '/prints': typeof PrintsRoute
   '/storage': typeof StorageRoute
@@ -180,8 +195,10 @@ export interface FileRoutesById {
   '/lookups/film-stocks': typeof LookupsFilmStocksRoute
   '/lookups/manufacturers': typeof LookupsManufacturersRoute
   '/lookups/paper-stocks': typeof LookupsPaperStocksRoute
+  '/negatives/$id': typeof NegativesIdRoute
   '/customers/': typeof CustomersIndexRoute
   '/lookups/': typeof LookupsIndexRoute
+  '/negatives/': typeof NegativesIndexRoute
   '/customers/$id/notes': typeof CustomersIdNotesRoute
   '/customers/$id/orders': typeof CustomersIdOrdersRoute
   '/customers/$id/': typeof CustomersIdIndexRoute
@@ -203,8 +220,10 @@ export interface FileRouteTypes {
     | '/lookups/film-stocks'
     | '/lookups/manufacturers'
     | '/lookups/paper-stocks'
+    | '/negatives/$id'
     | '/customers/'
     | '/lookups/'
+    | '/negatives/'
     | '/customers/$id/notes'
     | '/customers/$id/orders'
     | '/customers/$id/'
@@ -212,7 +231,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/editions'
-    | '/negatives'
     | '/orders'
     | '/prints'
     | '/storage'
@@ -221,8 +239,10 @@ export interface FileRouteTypes {
     | '/lookups/film-stocks'
     | '/lookups/manufacturers'
     | '/lookups/paper-stocks'
+    | '/negatives/$id'
     | '/customers'
     | '/lookups'
+    | '/negatives'
     | '/customers/$id/notes'
     | '/customers/$id/orders'
     | '/customers/$id'
@@ -242,8 +262,10 @@ export interface FileRouteTypes {
     | '/lookups/film-stocks'
     | '/lookups/manufacturers'
     | '/lookups/paper-stocks'
+    | '/negatives/$id'
     | '/customers/'
     | '/lookups/'
+    | '/negatives/'
     | '/customers/$id/notes'
     | '/customers/$id/orders'
     | '/customers/$id/'
@@ -254,7 +276,7 @@ export interface RootRouteChildren {
   CustomersRoute: typeof CustomersRouteWithChildren
   EditionsRoute: typeof EditionsRoute
   LookupsRoute: typeof LookupsRouteWithChildren
-  NegativesRoute: typeof NegativesRoute
+  NegativesRoute: typeof NegativesRouteWithChildren
   OrdersRoute: typeof OrdersRoute
   PrintsRoute: typeof PrintsRoute
   StorageRoute: typeof StorageRoute
@@ -318,6 +340,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/negatives/': {
+      id: '/negatives/'
+      path: '/'
+      fullPath: '/negatives/'
+      preLoaderRoute: typeof NegativesIndexRouteImport
+      parentRoute: typeof NegativesRoute
+    }
     '/lookups/': {
       id: '/lookups/'
       path: '/'
@@ -331,6 +360,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/customers/'
       preLoaderRoute: typeof CustomersIndexRouteImport
       parentRoute: typeof CustomersRoute
+    }
+    '/negatives/$id': {
+      id: '/negatives/$id'
+      path: '/$id'
+      fullPath: '/negatives/$id'
+      preLoaderRoute: typeof NegativesIdRouteImport
+      parentRoute: typeof NegativesRoute
     }
     '/lookups/paper-stocks': {
       id: '/lookups/paper-stocks'
@@ -449,12 +485,26 @@ const LookupsRouteChildren: LookupsRouteChildren = {
 const LookupsRouteWithChildren =
   LookupsRoute._addFileChildren(LookupsRouteChildren)
 
+interface NegativesRouteChildren {
+  NegativesIdRoute: typeof NegativesIdRoute
+  NegativesIndexRoute: typeof NegativesIndexRoute
+}
+
+const NegativesRouteChildren: NegativesRouteChildren = {
+  NegativesIdRoute: NegativesIdRoute,
+  NegativesIndexRoute: NegativesIndexRoute,
+}
+
+const NegativesRouteWithChildren = NegativesRoute._addFileChildren(
+  NegativesRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CustomersRoute: CustomersRouteWithChildren,
   EditionsRoute: EditionsRoute,
   LookupsRoute: LookupsRouteWithChildren,
-  NegativesRoute: NegativesRoute,
+  NegativesRoute: NegativesRouteWithChildren,
   OrdersRoute: OrdersRoute,
   PrintsRoute: PrintsRoute,
   StorageRoute: StorageRoute,
