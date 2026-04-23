@@ -88,9 +88,32 @@ Penumbra is a personal inventory app for a traditional film photographer who sel
 - No red dot for active nav — use the vertical safelight bar.
 - No colored gradients in the type or glyphs beyond the two-token palette — muddies the editorial tone.
 
+## Negative & frame numbering (decided — implement when schemas land)
+
+Format: `0059/2025-001` for a roll, `0059/2025-001/24` once a specific frame is referenced.
+
+- `0059` — global sequence across the entire archive (zero-padded to 4 digits).
+- `2025` — **year of development**, not exposure. They diverge regularly (shoot in December, develop in January) and picking one keeps `seqGlobal` and `seqYear` rising in lockstep.
+- `001` — sequence within that year (zero-padded to 3 digits).
+- `/24` — frame number on the roll (35mm only — the project doesn't shoot other formats).
+
+Storage rules:
+
+- Store components separately in DB (`seqGlobal`, `year`, `seqYear` on `negative`; `number` on `frame`). Compose the display ID — never store the formatted string. Avoids drift on imports/corrections.
+- Both sequences are kept (mild redundancy) — global gives a unique archive-wide handle, yearly gives editorial readability on sleeves. Generate them in one transaction so they stay in sync.
+
+Domain model: `Negative (roll) 1..N Frame 1..N Edition 1..N Print`.
+
+- `Negative` = a developed roll. Carries `seqGlobal`, `year`, `seqYear`, film stock, developer, dev notes.
+- `Frame` = one exposure on that roll. Carries `frameNumber`, subject/location/date-shot, EI/push, "keeper" flag, scan ref. Frame number lives **here**, not on `Negative` (1:N) and not denormalized down onto `Edition`/`Print` (integrity — FK to `frame.id` ensures the frame exists).
+- `Edition` = the artistic/production decision: this `Frame`, at this size, on this paper, in an edition of N. Carries paper, format, exposure time, dodge/burn notes, dev temp — everything needed to reprint consistently a year later. Same frame can spawn multiple editions (different sizes / papers / processes).
+- `Print` = a physical numbered instance within an `Edition` (e.g., 3/5). Carries `sequenceNumber` (1..edition.maxCount), state (available / sold / archived), and links to `Storage` and `Order`. Don't flatten Edition into Print — duplicating paper/exposure/dodging metadata onto every physical print is the bug Edition exists to prevent.
+
+Display ID is composed by walking relations: `frame.negative.displayId + "/" + pad(frame.number, 2)` → `0059/2025-001/24`.
+
 ## Roadmap hints (not implemented)
 
-- Remaining domain model (Negative, Frame, Edition, Print, Order, Storage) — routes exist as placeholders, schemas not yet written.
+- Remaining domain model (Negative, Frame, Edition, Print, Order, Storage) — routes exist as placeholders, schemas not yet written. See "Negative & frame numbering" above for the agreed ID format and entity split.
 - Authentication / multi-user — not yet needed.
 
 ## Reference: forge
