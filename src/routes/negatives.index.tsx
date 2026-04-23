@@ -10,6 +10,7 @@ import {
 } from '#/components/NegativeSheet'
 import type { NegativeWithRefs } from '#/db/schema'
 import { negativeDisplayId } from '#/lib/negative-id'
+import { listDeveloperDilutions } from '#/server/developerDilutions'
 import { listDevelopers } from '#/server/developers'
 import { listFilmStocks } from '#/server/filmStocks'
 import { listAllNegatives } from '#/server/negatives'
@@ -20,6 +21,7 @@ export const Route = createFileRoute('/negatives/')({
     negatives: await listAllNegatives(),
     filmStocks: await listFilmStocks(),
     developers: await listDevelopers(),
+    dilutions: await listDeveloperDilutions(),
   }),
 })
 
@@ -63,7 +65,7 @@ function computeNextSequences(
 }
 
 function NegativesIndex() {
-  const { negatives, filmStocks, developers } = Route.useLoaderData()
+  const { negatives, filmStocks, developers, dilutions } = Route.useLoaderData()
   const [open, setOpen] = useState(false)
 
   const nextSequences = useMemo(
@@ -124,6 +126,7 @@ function NegativesIndex() {
         onOpenChange={setOpen}
         filmStocks={filmStocks}
         developers={developers}
+        dilutions={dilutions}
         nextSequences={nextSequences}
       />
     </motion.section>

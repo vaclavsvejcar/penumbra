@@ -8,6 +8,7 @@ export const SCOPES: ReadonlyArray<ScopeDef> = [
   { code: 'film', itemType: 'film-stock', label: 'Film stocks', groupLabel: 'Film stocks' },
   { code: 'paper', itemType: 'paper-stock', label: 'Paper stocks', groupLabel: 'Paper stocks' },
   { code: 'dev', itemType: 'developer', label: 'Developers', groupLabel: 'Developers' },
+  { code: 'dil', itemType: 'developer-dilution', label: 'Dilutions', groupLabel: 'Dilutions' },
   { code: 'mfr', itemType: 'manufacturer', label: 'Manufacturers', groupLabel: 'Manufacturers' },
   { code: 'ctype', itemType: 'customer-type', label: 'Customer types', groupLabel: 'Customer types' },
 ]
@@ -36,6 +37,7 @@ export const GROUP_ORDER: ReadonlyArray<SearchItemType> = [
   'film-stock',
   'paper-stock',
   'developer',
+  'developer-dilution',
   'manufacturer',
   'customer-type',
 ]

@@ -25,6 +25,7 @@ import { Route as LookupsPaperStocksRouteImport } from './routes/lookups.paper-s
 import { Route as LookupsManufacturersRouteImport } from './routes/lookups.manufacturers'
 import { Route as LookupsFilmStocksRouteImport } from './routes/lookups.film-stocks'
 import { Route as LookupsDevelopersRouteImport } from './routes/lookups.developers'
+import { Route as LookupsDeveloperDilutionsRouteImport } from './routes/lookups.developer-dilutions'
 import { Route as LookupsCustomerTypesRouteImport } from './routes/lookups.customer-types'
 import { Route as CustomersIdRouteImport } from './routes/customers.$id'
 import { Route as CustomersIdIndexRouteImport } from './routes/customers.$id.index'
@@ -111,6 +112,12 @@ const LookupsDevelopersRoute = LookupsDevelopersRouteImport.update({
   path: '/developers',
   getParentRoute: () => LookupsRoute,
 } as any)
+const LookupsDeveloperDilutionsRoute =
+  LookupsDeveloperDilutionsRouteImport.update({
+    id: '/developer-dilutions',
+    path: '/developer-dilutions',
+    getParentRoute: () => LookupsRoute,
+  } as any)
 const LookupsCustomerTypesRoute = LookupsCustomerTypesRouteImport.update({
   id: '/customer-types',
   path: '/customer-types',
@@ -148,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/storage': typeof StorageRoute
   '/customers/$id': typeof CustomersIdRouteWithChildren
   '/lookups/customer-types': typeof LookupsCustomerTypesRoute
+  '/lookups/developer-dilutions': typeof LookupsDeveloperDilutionsRoute
   '/lookups/developers': typeof LookupsDevelopersRoute
   '/lookups/film-stocks': typeof LookupsFilmStocksRoute
   '/lookups/manufacturers': typeof LookupsManufacturersRoute
@@ -167,6 +175,7 @@ export interface FileRoutesByTo {
   '/prints': typeof PrintsRoute
   '/storage': typeof StorageRoute
   '/lookups/customer-types': typeof LookupsCustomerTypesRoute
+  '/lookups/developer-dilutions': typeof LookupsDeveloperDilutionsRoute
   '/lookups/developers': typeof LookupsDevelopersRoute
   '/lookups/film-stocks': typeof LookupsFilmStocksRoute
   '/lookups/manufacturers': typeof LookupsManufacturersRoute
@@ -191,6 +200,7 @@ export interface FileRoutesById {
   '/storage': typeof StorageRoute
   '/customers/$id': typeof CustomersIdRouteWithChildren
   '/lookups/customer-types': typeof LookupsCustomerTypesRoute
+  '/lookups/developer-dilutions': typeof LookupsDeveloperDilutionsRoute
   '/lookups/developers': typeof LookupsDevelopersRoute
   '/lookups/film-stocks': typeof LookupsFilmStocksRoute
   '/lookups/manufacturers': typeof LookupsManufacturersRoute
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/storage'
     | '/customers/$id'
     | '/lookups/customer-types'
+    | '/lookups/developer-dilutions'
     | '/lookups/developers'
     | '/lookups/film-stocks'
     | '/lookups/manufacturers'
@@ -235,6 +246,7 @@ export interface FileRouteTypes {
     | '/prints'
     | '/storage'
     | '/lookups/customer-types'
+    | '/lookups/developer-dilutions'
     | '/lookups/developers'
     | '/lookups/film-stocks'
     | '/lookups/manufacturers'
@@ -258,6 +270,7 @@ export interface FileRouteTypes {
     | '/storage'
     | '/customers/$id'
     | '/lookups/customer-types'
+    | '/lookups/developer-dilutions'
     | '/lookups/developers'
     | '/lookups/film-stocks'
     | '/lookups/manufacturers'
@@ -396,6 +409,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LookupsDevelopersRouteImport
       parentRoute: typeof LookupsRoute
     }
+    '/lookups/developer-dilutions': {
+      id: '/lookups/developer-dilutions'
+      path: '/developer-dilutions'
+      fullPath: '/lookups/developer-dilutions'
+      preLoaderRoute: typeof LookupsDeveloperDilutionsRouteImport
+      parentRoute: typeof LookupsRoute
+    }
     '/lookups/customer-types': {
       id: '/lookups/customer-types'
       path: '/customer-types'
@@ -466,6 +486,7 @@ const CustomersRouteWithChildren = CustomersRoute._addFileChildren(
 
 interface LookupsRouteChildren {
   LookupsCustomerTypesRoute: typeof LookupsCustomerTypesRoute
+  LookupsDeveloperDilutionsRoute: typeof LookupsDeveloperDilutionsRoute
   LookupsDevelopersRoute: typeof LookupsDevelopersRoute
   LookupsFilmStocksRoute: typeof LookupsFilmStocksRoute
   LookupsManufacturersRoute: typeof LookupsManufacturersRoute
@@ -475,6 +496,7 @@ interface LookupsRouteChildren {
 
 const LookupsRouteChildren: LookupsRouteChildren = {
   LookupsCustomerTypesRoute: LookupsCustomerTypesRoute,
+  LookupsDeveloperDilutionsRoute: LookupsDeveloperDilutionsRoute,
   LookupsDevelopersRoute: LookupsDevelopersRoute,
   LookupsFilmStocksRoute: LookupsFilmStocksRoute,
   LookupsManufacturersRoute: LookupsManufacturersRoute,

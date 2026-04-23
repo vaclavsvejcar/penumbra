@@ -15,6 +15,7 @@ import { NegativeSheet } from '#/components/NegativeSheet'
 import type { Frame, NegativeWithRefs } from '#/db/schema'
 import { negativeDisplayId, paddedFrameNumber } from '#/lib/negative-id'
 import { cn } from '#/lib/utils'
+import { listDeveloperDilutions } from '#/server/developerDilutions'
 import { listDevelopers } from '#/server/developers'
 import { listFilmStocks } from '#/server/filmStocks'
 import { deleteFrame, listFrames } from '#/server/frames'
@@ -39,14 +40,16 @@ export const Route = createFileRoute('/negatives/$id')({
   loader: async ({ params }) => {
     const id = Number(params.id)
     if (!Number.isInteger(id) || id <= 0) throw notFound()
-    const [negative, frames, filmStocks, developers] = await Promise.all([
-      getNegative({ data: id }),
-      listFrames({ data: id }),
-      listFilmStocks(),
-      listDevelopers(),
-    ])
+    const [negative, frames, filmStocks, developers, dilutions] =
+      await Promise.all([
+        getNegative({ data: id }),
+        listFrames({ data: id }),
+        listFilmStocks(),
+        listDevelopers(),
+        listDeveloperDilutions(),
+      ])
     if (!negative) throw notFound()
-    return { negative, frames, filmStocks, developers }
+    return { negative, frames, filmStocks, developers, dilutions }
   },
   notFoundComponent: NegativeNotFound,
 })
@@ -87,8 +90,16 @@ const TYPE_LABELS: Record<string, string> = {
   slide: 'Slide',
 }
 
+function formatDevTime(minutes: number): string {
+  const totalSeconds = Math.round(minutes * 60)
+  const mm = Math.floor(totalSeconds / 60)
+  const ss = totalSeconds % 60
+  return `${mm}:${String(ss).padStart(2, '0')}`
+}
+
 function NegativeDetail() {
-  const { negative, frames, filmStocks, developers } = Route.useLoaderData()
+  const { negative, frames, filmStocks, developers, dilutions } =
+    Route.useLoaderData()
   const router = useRouter()
   const archived = negative.archivedAt !== null
 
@@ -222,6 +233,19 @@ function NegativeDetail() {
                 ? `${negative.developer.manufacturer.label} ${negative.developer.label}`
                 : null}
             </Def>
+            <Def term="Dilution" mono>
+              {negative.dilution?.label ?? null}
+            </Def>
+            <Def term="Time" mono>
+              {negative.devTimeMinutes !== null
+                ? formatDevTime(negative.devTimeMinutes)
+                : null}
+            </Def>
+            <Def term="Temp" mono>
+              {negative.devTempC !== null
+                ? `${negative.devTempC.toFixed(1)} °C`
+                : null}
+            </Def>
             <Def term="Developed" mono>
               {dateFmt.format(negative.developedAt)}
             </Def>
@@ -285,6 +309,7 @@ function NegativeDetail() {
         negative={negative}
         filmStocks={filmStocks}
         developers={developers}
+        dilutions={dilutions}
       />
 
       <FrameSheet

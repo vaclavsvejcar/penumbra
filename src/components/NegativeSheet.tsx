@@ -5,12 +5,9 @@ import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select'
+  SearchSelect,
+  type SearchSelectItem,
+} from '#/components/ui/search-select'
 import {
   Sheet,
   SheetContent,
@@ -21,14 +18,13 @@ import {
 } from '#/components/ui/sheet'
 import { Textarea } from '#/components/ui/textarea'
 import type {
+  DeveloperDilutionWithDeveloper,
   DeveloperWithManufacturer,
   FilmStockWithManufacturer,
   NegativeWithRefs,
 } from '#/db/schema'
 import { negativeDisplayId } from '#/lib/negative-id'
 import { createNegative, updateNegative } from '#/server/negatives'
-
-const NO_DEVELOPER = '__none__'
 
 export type NegativeSequenceSuggestion = {
   global: number
@@ -41,7 +37,46 @@ type NegativeSheetProps = {
   negative?: NegativeWithRefs
   filmStocks: FilmStockWithManufacturer[]
   developers: DeveloperWithManufacturer[]
+  dilutions: DeveloperDilutionWithDeveloper[]
   nextSequences?: NegativeSequenceSuggestion
+}
+
+function parseTimeToMinutes(raw: string): number | null | 'invalid' {
+  const trimmed = raw.trim()
+  if (!trimmed) return null
+  const colonMatch = trimmed.match(/^(\d{1,3}):(\d{1,2})$/)
+  if (colonMatch) {
+    const mm = Number(colonMatch[1])
+    const ss = Number(colonMatch[2])
+    if (!Number.isFinite(mm) || !Number.isFinite(ss) || ss >= 60) {
+      return 'invalid'
+    }
+    return mm + ss / 60
+  }
+  const num = /^\d+(?:[.,]\d+)?$/.test(trimmed)
+    ? Number(trimmed.replace(',', '.'))
+    : NaN
+  if (Number.isFinite(num) && num >= 0) return num
+  return 'invalid'
+}
+
+function formatMinutesAsTime(minutes: number | null | undefined): string {
+  if (minutes === null || minutes === undefined) return ''
+  if (!Number.isFinite(minutes) || minutes < 0) return ''
+  const totalSeconds = Math.round(minutes * 60)
+  const mm = Math.floor(totalSeconds / 60)
+  const ss = totalSeconds % 60
+  return `${mm}:${String(ss).padStart(2, '0')}`
+}
+
+function parseTempC(raw: string): number | null | 'invalid' {
+  const trimmed = raw.trim()
+  if (!trimmed) return null
+  const num = /^-?\d+(?:[.,]\d+)?$/.test(trimmed)
+    ? Number(trimmed.replace(',', '.'))
+    : NaN
+  if (Number.isFinite(num)) return num
+  return 'invalid'
 }
 
 function suggestSeqYear(
@@ -78,6 +113,7 @@ export function NegativeSheet({
   negative,
   filmStocks,
   developers,
+  dilutions,
   nextSequences,
 }: NegativeSheetProps) {
   const isEdit = !!negative
@@ -109,6 +145,17 @@ export function NegativeSheet({
   const [developerId, setDeveloperId] = useState<number | null>(
     negative?.developerId ?? null,
   )
+  const [dilutionId, setDilutionId] = useState<number | null>(
+    negative?.developerDilutionId ?? null,
+  )
+  const [timeStr, setTimeStr] = useState(
+    formatMinutesAsTime(negative?.devTimeMinutes ?? null),
+  )
+  const [tempStr, setTempStr] = useState(
+    negative?.devTempC !== null && negative?.devTempC !== undefined
+      ? String(negative.devTempC)
+      : '',
+  )
   const [developedAt, setDevelopedAt] = useState(initialDate)
   const [devNotes, setDevNotes] = useState(negative?.devNotes ?? '')
   const [seqGlobalStr, setSeqGlobalStr] = useState(initialSeqGlobal)
@@ -118,6 +165,47 @@ export function NegativeSheet({
   const [seqYearTouched, setSeqYearTouched] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const filmStockItems = useMemo<SearchSelectItem[]>(
+    () =>
+      filmStocks.map((s) => ({
+        key: String(s.id),
+        label: `${s.manufacturer.label} ${s.label}`,
+        subtitle: `ISO ${s.iso}`,
+        searchText: `${s.manufacturer.label} ${s.label} ${s.code} iso${s.iso} ${s.type} ${s.process}`.toLowerCase(),
+      })),
+    [filmStocks],
+  )
+
+  const developerItems = useMemo<SearchSelectItem[]>(
+    () =>
+      developers.map((d) => ({
+        key: String(d.id),
+        label: `${d.manufacturer.label} ${d.label}`,
+        searchText: `${d.manufacturer.label} ${d.label} ${d.code} ${d.appliesTo} ${d.form}`.toLowerCase(),
+      })),
+    [developers],
+  )
+
+  const dilutionItems = useMemo<SearchSelectItem[]>(() => {
+    if (developerId === null) return []
+    return dilutions
+      .filter((d) => d.developerId === developerId)
+      .map((d) => ({
+        key: String(d.id),
+        label: d.label,
+        searchText: `${d.label} ${d.code}`.toLowerCase(),
+      }))
+  }, [dilutions, developerId])
+
+  // Reset dilution if it doesn't belong to the currently selected developer.
+  useEffect(() => {
+    if (dilutionId === null) return
+    const stillValid = dilutions.some(
+      (d) => d.id === dilutionId && d.developerId === developerId,
+    )
+    if (!stillValid) setDilutionId(null)
+  }, [developerId, dilutionId, dilutions])
 
   const yearNum = Number(yearStr)
   const yearValid = Number.isInteger(yearNum) && yearNum >= 1900 && yearNum <= 2999
@@ -150,6 +238,13 @@ export function NegativeSheet({
   function reset() {
     setFilmStockId(negative?.filmStockId ?? filmStocks[0]?.id ?? null)
     setDeveloperId(negative?.developerId ?? null)
+    setDilutionId(negative?.developerDilutionId ?? null)
+    setTimeStr(formatMinutesAsTime(negative?.devTimeMinutes ?? null))
+    setTempStr(
+      negative?.devTempC !== null && negative?.devTempC !== undefined
+        ? String(negative.devTempC)
+        : '',
+    )
     setDevelopedAt(initialDate)
     setDevNotes(negative?.devNotes ?? '')
     setSeqGlobalStr(initialSeqGlobal)
@@ -176,12 +271,25 @@ export function NegativeSheet({
       )
       return
     }
+    const parsedTime = parseTimeToMinutes(timeStr)
+    if (parsedTime === 'invalid') {
+      setError('Development time must be mm:ss or minutes (e.g. 14:30 or 14).')
+      return
+    }
+    const parsedTemp = parseTempC(tempStr)
+    if (parsedTemp === 'invalid') {
+      setError('Temperature must be a number in °C.')
+      return
+    }
     setSubmitting(true)
     setError(null)
     try {
       const basePayload = {
         filmStockId,
         developerId,
+        developerDilutionId: dilutionId,
+        devTimeMinutes: parsedTime,
+        devTempC: parsedTemp,
         developedAt,
         devNotes,
       }
@@ -233,43 +341,81 @@ export function NegativeSheet({
           className="flex flex-1 flex-col gap-5 px-4 py-2"
         >
           <Field label="Film stock" htmlFor="neg-film" required>
-            <Select
-              value={filmStockId ? String(filmStockId) : undefined}
-              onValueChange={(v) => setFilmStockId(Number(v))}
-            >
-              <SelectTrigger id="neg-film" className="w-full">
-                <SelectValue placeholder="Select a film stock" />
-              </SelectTrigger>
-              <SelectContent>
-                {filmStocks.map((s) => (
-                  <SelectItem key={s.id} value={String(s.id)}>
-                    {s.manufacturer.label} {s.label} · ISO {s.iso}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchSelect
+              id="neg-film"
+              items={filmStockItems}
+              value={filmStockId !== null ? String(filmStockId) : null}
+              onChange={(k) => setFilmStockId(k === null ? null : Number(k))}
+              placeholder="Select a film stock"
+              searchPlaceholder="Search film stocks…"
+              emptyLabel="No film stock matches."
+            />
           </Field>
 
           <Field label="Developer" htmlFor="neg-dev">
-            <Select
-              value={developerId ? String(developerId) : NO_DEVELOPER}
-              onValueChange={(v) =>
-                setDeveloperId(v === NO_DEVELOPER ? null : Number(v))
-              }
-            >
-              <SelectTrigger id="neg-dev" className="w-full">
-                <SelectValue placeholder="Optional" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NO_DEVELOPER}>None</SelectItem>
-                {developers.map((d) => (
-                  <SelectItem key={d.id} value={String(d.id)}>
-                    {d.manufacturer.label} {d.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchSelect
+              id="neg-dev"
+              items={developerItems}
+              value={developerId !== null ? String(developerId) : null}
+              onChange={(k) => setDeveloperId(k === null ? null : Number(k))}
+              placeholder="None"
+              clearLabel="None"
+              searchPlaceholder="Search developers…"
+              emptyLabel="No developer matches."
+            />
           </Field>
+
+          <Field label="Dilution" htmlFor="neg-dilution">
+            <SearchSelect
+              id="neg-dilution"
+              items={dilutionItems}
+              value={dilutionId !== null ? String(dilutionId) : null}
+              onChange={(k) => setDilutionId(k === null ? null : Number(k))}
+              placeholder={
+                developerId === null
+                  ? 'Pick a developer first'
+                  : dilutionItems.length === 0
+                    ? 'No dilutions defined for this developer'
+                    : 'None'
+              }
+              clearLabel="None"
+              searchPlaceholder="Search dilutions…"
+              emptyLabel="No dilution matches."
+              disabled={developerId === null || dilutionItems.length === 0}
+            />
+          </Field>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Time" htmlFor="neg-time">
+              <Input
+                id="neg-time"
+                value={timeStr}
+                onChange={(e) => setTimeStr(e.target.value)}
+                onBlur={(e) => {
+                  const parsed = parseTimeToMinutes(e.target.value)
+                  if (parsed === null) setTimeStr('')
+                  else if (parsed !== 'invalid') {
+                    setTimeStr(formatMinutesAsTime(parsed))
+                  }
+                }}
+                placeholder="mm:ss"
+                inputMode="numeric"
+                autoComplete="off"
+                className="font-mono tabular-nums"
+              />
+            </Field>
+            <Field label="Temp °C" htmlFor="neg-temp">
+              <Input
+                id="neg-temp"
+                value={tempStr}
+                onChange={(e) => setTempStr(e.target.value)}
+                placeholder="20"
+                inputMode="decimal"
+                autoComplete="off"
+                className="font-mono tabular-nums"
+              />
+            </Field>
+          </div>
 
           <Field label="Developed" htmlFor="neg-date" required>
             <Input
@@ -320,7 +466,7 @@ export function NegativeSheet({
               value={devNotes}
               onChange={(e) => setDevNotes(e.target.value)}
               rows={4}
-              placeholder="Dilution, time, agitation, anything worth remembering."
+              placeholder="Agitation, deviation from the recipe, anything worth remembering."
             />
           </Field>
 

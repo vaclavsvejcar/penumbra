@@ -3,6 +3,7 @@ import { and, desc, eq, isNull, max, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import { db } from '#/db/client'
 import {
+  developerDilutions,
   developers,
   filmStocks,
   frames,
@@ -84,6 +85,25 @@ function parseNullableText(value: unknown, label: string): string | null {
   return trimmed.length === 0 ? null : trimmed
 }
 
+function parseNullableNumber(
+  value: unknown,
+  label: string,
+  opts?: { min?: number; max?: number },
+): number | null {
+  if (value === null || value === undefined || value === '') return null
+  const n = typeof value === 'string' ? Number(value) : value
+  if (typeof n !== 'number' || !Number.isFinite(n)) {
+    throw new Error(`${label} must be a number`)
+  }
+  if (opts?.min !== undefined && n < opts.min) {
+    throw new Error(`${label} must be at least ${opts.min}`)
+  }
+  if (opts?.max !== undefined && n > opts.max) {
+    throw new Error(`${label} must be at most ${opts.max}`)
+  }
+  return n
+}
+
 async function assertFilmStockExists(id: number) {
   const row = await db
     .select({ id: filmStocks.id, archivedAt: filmStocks.archivedAt })
@@ -104,12 +124,36 @@ async function assertDeveloperExists(id: number) {
   if (row.archivedAt) throw new Error('Developer is archived')
 }
 
+async function assertDilutionMatchesDeveloper(
+  dilutionId: number,
+  developerId: number | null,
+) {
+  if (developerId === null) {
+    throw new Error('Cannot set a dilution without a developer')
+  }
+  const row = await db
+    .select({
+      id: developerDilutions.id,
+      developerId: developerDilutions.developerId,
+      archivedAt: developerDilutions.archivedAt,
+    })
+    .from(developerDilutions)
+    .where(eq(developerDilutions.id, dilutionId))
+    .get()
+  if (!row) throw new Error('Dilution not found')
+  if (row.archivedAt) throw new Error('Dilution is archived')
+  if (row.developerId !== developerId) {
+    throw new Error('Dilution does not belong to the selected developer')
+  }
+}
+
 type RawSelectRow = {
   negative: typeof negatives.$inferSelect
   filmStock: typeof filmStocks.$inferSelect
   filmManufacturer: typeof manufacturers.$inferSelect
   developer: typeof developers.$inferSelect | null
   devManufacturer: typeof manufacturers.$inferSelect | null
+  dilution: typeof developerDilutions.$inferSelect | null
   frameCount: number
   keeperCount: number
 }
@@ -143,6 +187,14 @@ function joinNegative(row: RawSelectRow): NegativeWithRefs {
             },
           }
         : null,
+    dilution: row.dilution
+      ? {
+          id: row.dilution.id,
+          code: row.dilution.code,
+          label: row.dilution.label,
+          developerId: row.dilution.developerId,
+        }
+      : null,
     frameCount: Number(row.frameCount ?? 0),
     keeperCount: Number(row.keeperCount ?? 0),
   }
@@ -154,6 +206,7 @@ const baseSelect = {
   filmManufacturer: filmManufacturers,
   developer: developers,
   devManufacturer: devManufacturers,
+  dilution: developerDilutions,
   frameCount:
     sql<number>`(SELECT count(*) FROM ${frames} WHERE ${frames.negativeId} = ${negatives.id})`.as(
       'frame_count',
@@ -177,6 +230,10 @@ function baseQuery() {
     .leftJoin(
       devManufacturers,
       eq(developers.manufacturerId, devManufacturers.id),
+    )
+    .leftJoin(
+      developerDilutions,
+      eq(negatives.developerDilutionId, developerDilutions.id),
     )
 }
 
@@ -207,6 +264,9 @@ export const getNegative = createServerFn({ method: 'GET' })
 type CreateInput = {
   filmStockId: number
   developerId: number | null
+  developerDilutionId: number | null
+  devTimeMinutes: number | null
+  devTempC: number | null
   developedAt: Date
   devNotes: string | null
   seqGlobal?: number
@@ -239,6 +299,16 @@ export const createNegative = createServerFn({ method: 'POST' })
     return {
       filmStockId: parseId(input.filmStockId),
       developerId: parseOptionalId(input.developerId),
+      developerDilutionId: parseOptionalId(input.developerDilutionId),
+      devTimeMinutes: parseNullableNumber(
+        input.devTimeMinutes,
+        'Development time',
+        { min: 0, max: 300 },
+      ),
+      devTempC: parseNullableNumber(input.devTempC, 'Temperature', {
+        min: -5,
+        max: 50,
+      }),
       developedAt: parseDate(input.developedAt),
       devNotes: parseNullableText(input.devNotes, 'notes'),
       seqGlobal: parseOptionalPositiveInt(input.seqGlobal, 'Global №'),
@@ -250,6 +320,12 @@ export const createNegative = createServerFn({ method: 'POST' })
     await assertFilmStockExists(data.filmStockId)
     if (data.developerId !== null) {
       await assertDeveloperExists(data.developerId)
+    }
+    if (data.developerDilutionId !== null) {
+      await assertDilutionMatchesDeveloper(
+        data.developerDilutionId,
+        data.developerId,
+      )
     }
     const year = data.year ?? data.developedAt.getUTCFullYear()
     return db.transaction((tx) => {
@@ -304,6 +380,9 @@ export const createNegative = createServerFn({ method: 'POST' })
           seqYear,
           filmStockId: data.filmStockId,
           developerId: data.developerId,
+          developerDilutionId: data.developerDilutionId,
+          devTimeMinutes: data.devTimeMinutes,
+          devTempC: data.devTempC,
           developedAt: data.developedAt,
           devNotes: data.devNotes,
         })
@@ -316,6 +395,9 @@ export const createNegative = createServerFn({ method: 'POST' })
 type UpdateInput = {
   filmStockId?: number
   developerId?: number | null
+  developerDilutionId?: number | null
+  devTimeMinutes?: number | null
+  devTempC?: number | null
   developedAt?: Date
   devNotes?: string | null
 }
@@ -329,6 +411,22 @@ export const updateNegative = createServerFn({ method: 'POST' })
     if ('filmStockId' in input) patch.filmStockId = parseId(input.filmStockId)
     if ('developerId' in input) {
       patch.developerId = parseOptionalId(input.developerId)
+    }
+    if ('developerDilutionId' in input) {
+      patch.developerDilutionId = parseOptionalId(input.developerDilutionId)
+    }
+    if ('devTimeMinutes' in input) {
+      patch.devTimeMinutes = parseNullableNumber(
+        input.devTimeMinutes,
+        'Development time',
+        { min: 0, max: 300 },
+      )
+    }
+    if ('devTempC' in input) {
+      patch.devTempC = parseNullableNumber(input.devTempC, 'Temperature', {
+        min: -5,
+        max: 50,
+      })
     }
     if ('developedAt' in input) patch.developedAt = parseDate(input.developedAt)
     if ('devNotes' in input) {
@@ -346,6 +444,32 @@ export const updateNegative = createServerFn({ method: 'POST' })
       data.patch.developerId !== null
     ) {
       await assertDeveloperExists(data.patch.developerId)
+    }
+    // Cross-check dilution when either dilution or developer changes.
+    if (
+      data.patch.developerDilutionId !== undefined ||
+      data.patch.developerId !== undefined
+    ) {
+      const existing = await db
+        .select({
+          developerId: negatives.developerId,
+          developerDilutionId: negatives.developerDilutionId,
+        })
+        .from(negatives)
+        .where(eq(negatives.id, data.id))
+        .get()
+      if (!existing) throw new Error('Negative not found')
+      const finalDeveloperId =
+        data.patch.developerId !== undefined
+          ? data.patch.developerId
+          : existing.developerId
+      const finalDilutionId =
+        data.patch.developerDilutionId !== undefined
+          ? data.patch.developerDilutionId
+          : existing.developerDilutionId
+      if (finalDilutionId !== null) {
+        await assertDilutionMatchesDeveloper(finalDilutionId, finalDeveloperId)
+      }
     }
     const [row] = await db
       .update(negatives)

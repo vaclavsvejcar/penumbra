@@ -22,6 +22,7 @@ type Category = {
     | '/lookups/film-stocks'
     | '/lookups/paper-stocks'
     | '/lookups/developers'
+    | '/lookups/developer-dilutions'
   kicker: string
   title: string
   description: string
@@ -62,6 +63,13 @@ const categories: Category[] = [
     title: 'Developers',
     description:
       'Chemistry for film and paper. Includes universal and monobath developers.',
+  },
+  {
+    to: '/lookups/developer-dilutions',
+    kicker: 'Lookup',
+    title: 'Developer dilutions',
+    description:
+      'Standard dilutions per developer (stock, 1+50, HC-110 B). Pickable on the negative form.',
   },
 ]
 

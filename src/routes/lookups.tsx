@@ -29,6 +29,11 @@ const tabs = [
   { to: '/lookups/film-stocks', label: 'Film stocks', exact: false },
   { to: '/lookups/paper-stocks', label: 'Paper stocks', exact: false },
   { to: '/lookups/developers', label: 'Developers', exact: false },
+  {
+    to: '/lookups/developer-dilutions',
+    label: 'Dilutions',
+    exact: false,
+  },
 ] as const
 
 function LookupsLayout() {

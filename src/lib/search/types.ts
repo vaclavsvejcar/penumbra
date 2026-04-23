@@ -3,6 +3,7 @@ import type {
   CustomerType,
   CustomerWithType,
   Developer,
+  DeveloperDilutionWithDeveloper,
   DeveloperWithManufacturer,
   FilmStock,
   FilmStockWithManufacturer,
@@ -83,6 +84,15 @@ export type SearchItem =
       data: DeveloperWithManufacturer
     }
   | {
+      type: 'developer-dilution'
+      id: number
+      title: string
+      kicker: string
+      subtitle?: string
+      searchText: string
+      data: DeveloperDilutionWithDeveloper
+    }
+  | {
       type: 'negative'
       id: number
       title: string
@@ -132,6 +142,7 @@ export type {
   CustomerType,
   CustomerWithType,
   Developer,
+  DeveloperDilutionWithDeveloper,
   DeveloperWithManufacturer,
   FilmStock,
   FilmStockWithManufacturer,

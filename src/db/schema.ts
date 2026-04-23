@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm'
 import {
   check,
   integer,
+  real,
   sqliteTable,
   text,
   uniqueIndex,
@@ -183,6 +184,42 @@ export type DeveloperWithManufacturer = Developer & {
   manufacturer: Pick<Manufacturer, 'id' | 'code' | 'label'>
 }
 
+export const developerDilutions = sqliteTable(
+  'developer_dilutions',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    code: text('code').notNull(),
+    label: text('label').notNull(),
+    developerId: integer('developer_id')
+      .notNull()
+      .references(() => developers.id, { onDelete: 'restrict' }),
+    sortOrder: integer('sort_order').notNull().default(0),
+    archivedAt: integer('archived_at', { mode: 'timestamp' }),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    updatedAt: integer('updated_at', { mode: 'timestamp' })
+      .notNull()
+      .default(sql`(unixepoch())`)
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    uniqueIndex('developer_dilutions_developer_code_unique').on(
+      t.developerId,
+      t.code,
+    ),
+  ],
+)
+
+export type DeveloperDilution = typeof developerDilutions.$inferSelect
+export type NewDeveloperDilution = typeof developerDilutions.$inferInsert
+
+export type DeveloperDilutionWithDeveloper = DeveloperDilution & {
+  developer: Pick<Developer, 'id' | 'code' | 'label'> & {
+    manufacturer: Pick<Manufacturer, 'id' | 'code' | 'label'>
+  }
+}
+
 export const customers = sqliteTable('customers', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
@@ -222,6 +259,12 @@ export const negatives = sqliteTable(
     developerId: integer('developer_id').references(() => developers.id, {
       onDelete: 'restrict',
     }),
+    developerDilutionId: integer('developer_dilution_id').references(
+      () => developerDilutions.id,
+      { onDelete: 'restrict' },
+    ),
+    devTimeMinutes: real('dev_time_minutes'),
+    devTempC: real('dev_temp_c'),
     developedAt: integer('developed_at', { mode: 'timestamp' }).notNull(),
     devNotes: text('dev_notes'),
     archivedAt: integer('archived_at', { mode: 'timestamp' }),
@@ -250,9 +293,15 @@ export type NegativeDeveloper = Pick<Developer, 'id' | 'code' | 'label'> & {
   manufacturer: Pick<Manufacturer, 'id' | 'code' | 'label'>
 }
 
+export type NegativeDilution = Pick<
+  DeveloperDilution,
+  'id' | 'code' | 'label' | 'developerId'
+>
+
 export type NegativeWithRefs = Negative & {
   filmStock: NegativeFilmStock
   developer: NegativeDeveloper | null
+  dilution: NegativeDilution | null
   frameCount: number
   keeperCount: number
 }
@@ -302,9 +351,12 @@ export type NegativeSearchItem = Pick<
   | 'developedAt'
   | 'archivedAt'
   | 'devNotes'
+  | 'devTimeMinutes'
+  | 'devTempC'
 > & {
   filmStock: NegativeFilmStock
   developer: NegativeDeveloper | null
+  dilution: NegativeDilution | null
 }
 
 export type FrameSearchItem = Pick<

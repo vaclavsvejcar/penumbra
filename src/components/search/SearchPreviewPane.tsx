@@ -6,6 +6,7 @@ import { ManufacturerPreview } from './previews/ManufacturerPreview'
 import { FilmStockPreview } from './previews/FilmStockPreview'
 import { PaperStockPreview } from './previews/PaperStockPreview'
 import { DeveloperPreview } from './previews/DeveloperPreview'
+import { DeveloperDilutionPreview } from './previews/DeveloperDilutionPreview'
 import { NegativePreview } from './previews/NegativePreview'
 import { FramePreview } from './previews/FramePreview'
 
@@ -37,6 +38,8 @@ export function SearchPreviewPane({ item }: Props) {
       return <PaperStockPreview item={item} />
     case 'developer':
       return <DeveloperPreview item={item} />
+    case 'developer-dilution':
+      return <DeveloperDilutionPreview item={item} />
     case 'negative':
       return <NegativePreview item={item} />
     case 'frame':

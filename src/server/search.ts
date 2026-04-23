@@ -5,6 +5,7 @@ import { db } from '#/db/client'
 import {
   customerTypes,
   customers,
+  developerDilutions,
   developers,
   filmStocks,
   frames,
@@ -40,6 +41,7 @@ export const listSearchIndex = createServerFn({ method: 'GET' }).handler(
       developerRows,
       negativeRows,
       frameRows,
+      dilutionRows,
     ] = await Promise.all([
       db
         .select({ customer: customers, customerType: customerTypes })
@@ -90,6 +92,7 @@ export const listSearchIndex = createServerFn({ method: 'GET' }).handler(
           filmManufacturer: filmManufacturers,
           developer: developers,
           devManufacturer: devManufacturers,
+          dilution: developerDilutions,
         })
         .from(negatives)
         .innerJoin(filmStocks, eq(negatives.filmStockId, filmStocks.id))
@@ -102,6 +105,10 @@ export const listSearchIndex = createServerFn({ method: 'GET' }).handler(
           devManufacturers,
           eq(developers.manufacturerId, devManufacturers.id),
         )
+        .leftJoin(
+          developerDilutions,
+          eq(negatives.developerDilutionId, developerDilutions.id),
+        )
         .where(isNull(negatives.archivedAt))
         .orderBy(desc(negatives.seqGlobal))
         .all(),
@@ -111,6 +118,28 @@ export const listSearchIndex = createServerFn({ method: 'GET' }).handler(
         .innerJoin(negatives, eq(frames.negativeId, negatives.id))
         .where(isNull(negatives.archivedAt))
         .orderBy(desc(negatives.seqGlobal), asc(frames.frameNumber))
+        .all(),
+      db
+        .select({
+          dilution: developerDilutions,
+          developer: developers,
+          manufacturer: manufacturers,
+        })
+        .from(developerDilutions)
+        .innerJoin(
+          developers,
+          eq(developerDilutions.developerId, developers.id),
+        )
+        .innerJoin(
+          manufacturers,
+          eq(developers.manufacturerId, manufacturers.id),
+        )
+        .where(isNull(developerDilutions.archivedAt))
+        .orderBy(
+          asc(developers.label),
+          asc(developerDilutions.sortOrder),
+          asc(developerDilutions.label),
+        )
         .all(),
     ])
 
@@ -246,6 +275,7 @@ export const listSearchIndex = createServerFn({ method: 'GET' }).handler(
       const fm = row.filmManufacturer
       const d = row.developer
       const dm = row.devManufacturer
+      const dil = row.dilution
       const display = negativeDisplayId(n)
       items.push({
         type: 'negative',
@@ -264,6 +294,8 @@ export const listSearchIndex = createServerFn({ method: 'GET' }).handler(
           d?.label,
           d?.code,
           dm?.label,
+          dil?.label,
+          dil?.code,
           n.devNotes,
         ),
         data: {
@@ -274,6 +306,8 @@ export const listSearchIndex = createServerFn({ method: 'GET' }).handler(
           developedAt: n.developedAt,
           archivedAt: n.archivedAt,
           devNotes: n.devNotes,
+          devTimeMinutes: n.devTimeMinutes,
+          devTempC: n.devTempC,
           filmStock: {
             id: fs.id,
             code: fs.code,
@@ -292,6 +326,14 @@ export const listSearchIndex = createServerFn({ method: 'GET' }).handler(
                   manufacturer: { id: dm.id, code: dm.code, label: dm.label },
                 }
               : null,
+          dilution: dil
+            ? {
+                id: dil.id,
+                code: dil.code,
+                label: dil.label,
+                developerId: dil.developerId,
+              }
+            : null,
         },
       })
     }
@@ -327,6 +369,39 @@ export const listSearchIndex = createServerFn({ method: 'GET' }).handler(
             seqGlobal: n.seqGlobal,
             year: n.year,
             seqYear: n.seqYear,
+          },
+        },
+      })
+    }
+
+    for (const row of dilutionRows) {
+      const dil = row.dilution
+      const d = row.developer
+      const m = row.manufacturer
+      items.push({
+        type: 'developer-dilution',
+        id: dil.id,
+        title: `${m.label} ${d.label} · ${dil.label}`,
+        kicker: `N° ${String(dil.id).padStart(4, '0')}`,
+        subtitle: d.label,
+        searchText: norm(
+          m.label,
+          m.code,
+          d.label,
+          d.code,
+          dil.label,
+          dil.code,
+        ),
+        data: {
+          id: dil.id,
+          code: dil.code,
+          label: dil.label,
+          developerId: dil.developerId,
+          developer: {
+            id: d.id,
+            code: d.code,
+            label: d.label,
+            manufacturer: { id: m.id, code: m.code, label: m.label },
           },
         },
       })

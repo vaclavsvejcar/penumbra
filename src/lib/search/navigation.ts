@@ -46,6 +46,12 @@ const NAV: ReadonlyArray<NavSpec> = [
     group: 'Settings',
     subtitle: 'Lookup',
   },
+  {
+    title: 'Developer dilutions',
+    href: '/lookups/developer-dilutions',
+    group: 'Settings',
+    subtitle: 'Lookup',
+  },
   { title: 'Storage', href: '/storage', group: 'Settings' },
 ]
 
