@@ -1,5 +1,6 @@
 import { useRouter } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
+import { NegativeIdInput } from '#/components/NegativeIdInput'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
@@ -56,10 +57,6 @@ function parseYearFromIsoDate(iso: string): number | null {
   return m ? Number(m[1]) : null
 }
 
-function pad(n: number, width: number): string {
-  return String(n).padStart(width, '0')
-}
-
 function todayIso(): string {
   const d = new Date()
   const y = d.getFullYear()
@@ -97,11 +94,14 @@ export function NegativeSheet({
   }, [negative, initialDate])
 
   const initialSeqGlobal = negative
-    ? String(negative.seqGlobal)
-    : String(nextSequences?.global ?? 1)
+    ? String(negative.seqGlobal).padStart(4, '0')
+    : String(nextSequences?.global ?? 1).padStart(4, '0')
+  const initialYearStr = negative
+    ? String(negative.year)
+    : String(initialYear)
   const initialSeqYear = negative
-    ? String(negative.seqYear)
-    : String(suggestSeqYear(nextSequences, initialYear))
+    ? String(negative.seqYear).padStart(3, '0')
+    : String(suggestSeqYear(nextSequences, initialYear)).padStart(3, '0')
 
   const [filmStockId, setFilmStockId] = useState<number | null>(
     negative?.filmStockId ?? filmStocks[0]?.id ?? null,
@@ -112,19 +112,31 @@ export function NegativeSheet({
   const [developedAt, setDevelopedAt] = useState(initialDate)
   const [devNotes, setDevNotes] = useState(negative?.devNotes ?? '')
   const [seqGlobalStr, setSeqGlobalStr] = useState(initialSeqGlobal)
+  const [yearStr, setYearStr] = useState(initialYearStr)
   const [seqYearStr, setSeqYearStr] = useState(initialSeqYear)
+  const [yearTouched, setYearTouched] = useState(false)
   const [seqYearTouched, setSeqYearTouched] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const dateYear = parseYearFromIsoDate(developedAt) ?? initialYear
+  const yearNum = Number(yearStr)
+  const yearValid = Number.isInteger(yearNum) && yearNum >= 1900 && yearNum <= 2999
 
-  // Re-suggest year sequence when the developed year changes, but only if the
-  // user hasn't manually edited the field.
+  // When developedAt changes, re-sync year (unless the user has touched it).
+  useEffect(() => {
+    if (isEdit || yearTouched) return
+    const dateYear = parseYearFromIsoDate(developedAt)
+    if (dateYear !== null) setYearStr(String(dateYear))
+  }, [developedAt, isEdit, yearTouched])
+
+  // When the identifier's year changes, re-suggest seqYear (unless touched).
   useEffect(() => {
     if (isEdit || seqYearTouched) return
-    setSeqYearStr(String(suggestSeqYear(nextSequences, dateYear)))
-  }, [dateYear, isEdit, seqYearTouched, nextSequences])
+    if (!yearValid) return
+    setSeqYearStr(
+      String(suggestSeqYear(nextSequences, yearNum)).padStart(3, '0'),
+    )
+  }, [yearNum, yearValid, isEdit, seqYearTouched, nextSequences])
 
   const seqGlobalNum = Number(seqGlobalStr)
   const seqYearNum = Number(seqYearStr)
@@ -133,10 +145,7 @@ export function NegativeSheet({
   const seqYearValid =
     Number.isInteger(seqYearNum) && seqYearNum > 0 && seqYearNum <= 999
 
-  const previewId =
-    seqGlobalValid && seqYearValid
-      ? `${pad(seqGlobalNum, 4)}/${dateYear}-${pad(seqYearNum, 3)}`
-      : null
+  const identifierValid = seqGlobalValid && yearValid && seqYearValid
 
   function reset() {
     setFilmStockId(negative?.filmStockId ?? filmStocks[0]?.id ?? null)
@@ -144,7 +153,9 @@ export function NegativeSheet({
     setDevelopedAt(initialDate)
     setDevNotes(negative?.devNotes ?? '')
     setSeqGlobalStr(initialSeqGlobal)
+    setYearStr(initialYearStr)
     setSeqYearStr(initialSeqYear)
+    setYearTouched(false)
     setSeqYearTouched(false)
     setError(null)
   }
@@ -159,8 +170,10 @@ export function NegativeSheet({
       setError('Developed date is required.')
       return
     }
-    if (!isEdit && (!seqGlobalValid || !seqYearValid)) {
-      setError('Global № and Year № must be positive integers.')
+    if (!isEdit && !identifierValid) {
+      setError(
+        'Identifier must be a valid global number, four-digit year, and year sequence.',
+      )
       return
     }
     setSubmitting(true)
@@ -179,6 +192,7 @@ export function NegativeSheet({
           data: {
             ...basePayload,
             seqGlobal: seqGlobalNum,
+            year: yearNum,
             seqYear: seqYearNum,
           },
         })
@@ -270,52 +284,32 @@ export function NegativeSheet({
 
           {!isEdit ? (
             <div className="flex flex-col gap-2">
-              <Label className="kicker">
+              <Label id="neg-id-label" className="kicker">
                 Identifier<span className="text-safelight ml-1">*</span>
               </Label>
-              <div className="grid grid-cols-[1fr_auto_1fr_auto_auto] items-center gap-2">
-                <Input
-                  id="neg-seq-global"
-                  type="number"
-                  min={1}
-                  max={9999}
-                  value={seqGlobalStr}
-                  onChange={(e) => setSeqGlobalStr(e.target.value)}
-                  className="font-mono tabular-nums"
-                  aria-label="Global number"
-                  aria-invalid={seqGlobalValid ? undefined : true}
-                  required
-                />
-                <span className="text-ink-muted font-mono text-sm">/</span>
-                <Input
-                  readOnly
-                  tabIndex={-1}
-                  value={dateYear}
-                  className="text-ink-soft bg-muted/40 font-mono tabular-nums"
-                  aria-label="Year (from developed date)"
-                />
-                <span className="text-ink-muted font-mono text-sm">-</span>
-                <Input
-                  id="neg-seq-year"
-                  type="number"
-                  min={1}
-                  max={999}
-                  value={seqYearStr}
-                  onChange={(e) => {
-                    setSeqYearStr(e.target.value)
-                    setSeqYearTouched(true)
-                  }}
-                  className="font-mono tabular-nums"
-                  aria-label="Year sequence"
-                  aria-invalid={seqYearValid ? undefined : true}
-                  required
-                />
-              </div>
+              <NegativeIdInput
+                aria-labelledby="neg-id-label"
+                seqGlobal={seqGlobalStr}
+                year={yearStr}
+                seqYear={seqYearStr}
+                onSeqGlobalChange={setSeqGlobalStr}
+                onYearChange={(v) => {
+                  setYearStr(v)
+                  setYearTouched(true)
+                }}
+                onSeqYearChange={(v) => {
+                  setSeqYearStr(v)
+                  setSeqYearTouched(true)
+                }}
+                invalid={{
+                  seqGlobal: !seqGlobalValid,
+                  year: !yearValid,
+                  seqYear: !seqYearValid,
+                }}
+              />
               <p className="text-ink-muted text-xs">
-                Preview:{' '}
-                <span className="text-ink-soft font-mono tabular-nums">
-                  {previewId ?? '—'}
-                </span>
+                Prefilled with the next free number. Year auto-syncs with
+                Developed until you edit it.
               </p>
             </div>
           ) : null}
@@ -352,7 +346,7 @@ export function NegativeSheet({
                 disabled={
                   submitting ||
                   filmStockId === null ||
-                  (!isEdit && (!seqGlobalValid || !seqYearValid))
+                  (!isEdit && !identifierValid)
                 }
               >
                 {submitting ? 'Saving…' : isEdit ? 'Save changes' : 'Save'}

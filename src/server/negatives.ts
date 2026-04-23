@@ -39,6 +39,18 @@ function parseOptionalPositiveInt(
   return n
 }
 
+function parseOptionalYear(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === '') return undefined
+  const n = typeof value === 'string' ? Number(value) : value
+  if (typeof n !== 'number' || !Number.isInteger(n)) {
+    throw new Error('Year must be a whole number')
+  }
+  if (n < 1900 || n > 2999) {
+    throw new Error('Year must be between 1900 and 2999')
+  }
+  return n
+}
+
 function pad(n: number, width: number): string {
   return String(n).padStart(width, '0')
 }
@@ -198,6 +210,7 @@ type CreateInput = {
   developedAt: Date
   devNotes: string | null
   seqGlobal?: number
+  year?: number
   seqYear?: number
 }
 
@@ -229,6 +242,7 @@ export const createNegative = createServerFn({ method: 'POST' })
       developedAt: parseDate(input.developedAt),
       devNotes: parseNullableText(input.devNotes, 'notes'),
       seqGlobal: parseOptionalPositiveInt(input.seqGlobal, 'Global №'),
+      year: parseOptionalYear(input.year),
       seqYear: parseOptionalPositiveInt(input.seqYear, 'Year №'),
     }
   })
@@ -237,7 +251,7 @@ export const createNegative = createServerFn({ method: 'POST' })
     if (data.developerId !== null) {
       await assertDeveloperExists(data.developerId)
     }
-    const year = data.developedAt.getUTCFullYear()
+    const year = data.year ?? data.developedAt.getUTCFullYear()
     return db.transaction((tx) => {
       let seqGlobal: number
       if (data.seqGlobal !== undefined) {
@@ -332,20 +346,6 @@ export const updateNegative = createServerFn({ method: 'POST' })
       data.patch.developerId !== null
     ) {
       await assertDeveloperExists(data.patch.developerId)
-    }
-    if (data.patch.developedAt !== undefined) {
-      const existing = await db
-        .select({ year: negatives.year })
-        .from(negatives)
-        .where(eq(negatives.id, data.id))
-        .get()
-      if (!existing) throw new Error('Negative not found')
-      const newYear = data.patch.developedAt.getUTCFullYear()
-      if (newYear !== existing.year) {
-        throw new Error(
-          `Developed year (${newYear}) cannot differ from assigned year (${existing.year}). Archive and create a new entry instead.`,
-        )
-      }
     }
     const [row] = await db
       .update(negatives)
