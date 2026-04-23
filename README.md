@@ -60,31 +60,44 @@ pnpm dev              # http://localhost:3000
 
 ```
 src/
-├── routes/                   # file-based routes (TanStack Router)
+├── routes/                   # file-based routes (TanStack Router, dot-nested)
 │   ├── __root.tsx            # root layout: sidebar + content column
 │   ├── index.tsx             # dashboard / home
+│   ├── customers.tsx         # customers index + layout for detail routes
+│   ├── customers.index.tsx   # list view
+│   ├── customers.$id.*.tsx   # detail tabs: index / notes / orders
+│   ├── lookups.tsx           # lookups layout
+│   ├── lookups.*.tsx         # manufacturers, film / paper stocks, developers, customer types
 │   ├── negatives.tsx         # stub
 │   ├── editions.tsx          # stub
 │   ├── prints.tsx            # stub
-│   ├── customers.tsx         # stub
-│   └── orders.tsx            # stub
+│   ├── orders.tsx            # stub
+│   └── storage.tsx           # stub
 ├── components/
 │   ├── Sidebar.tsx           # desktop left sidebar
 │   ├── MobileNav.tsx         # mobile top bar + sheet drawer
 │   ├── ThemeToggle.tsx       # icon-based light / dark / auto
+│   ├── SearchPalette.tsx     # ⌘K command palette
+│   ├── SearchProvider.tsx    # palette context + keybindings
+│   ├── CustomerSheet.tsx     # customer create / edit sheet
+│   ├── EnvBadge.tsx          # DEV / PROD kicker
 │   ├── PlaceholderPage.tsx   # shared empty-state template
-│   └── ui/                   # shadcn components (button, card, badge, separator, sheet)
+│   ├── lookup/               # reusable lookup-admin pattern (header, list, form, hook)
+│   ├── search/               # palette internals (results, preview, prompts)
+│   └── ui/                   # shadcn primitives
+├── server/                   # createServerFn RPC handlers (customers, lookups, search, …)
 ├── db/
-│   ├── client.ts             # Drizzle client (better-sqlite3)
+│   ├── client.ts             # Drizzle client (better-sqlite3, WAL, FKs on)
 │   ├── schema.ts             # database schema
+│   ├── paths.ts              # DB path resolver (dev vs. OS data dir, DATABASE_URL override)
 │   └── migrations/           # generated SQL migrations
-├── lib/                      # helper utilities
+├── lib/                      # helpers: slug, validation, search utilities
 ├── router.tsx                # router config
 ├── routeTree.gen.ts          # auto-generated — do not edit
 └── styles.css                # design tokens (B/W/red OKLCH) + Tailwind
 ```
 
-The `penumbra.db` file is in `.gitignore` — each environment has its own local database.
+The `penumbra.db` file is in `.gitignore` — each environment has its own local database. In dev the DB lives in the project root; production builds write to the OS data directory (`~/Library/Application Support/penumbra/` on macOS, `%LOCALAPPDATA%\penumbra\` on Windows, `$XDG_DATA_HOME/penumbra/` on Linux). Set `DATABASE_URL` to override.
 
 ## Design
 

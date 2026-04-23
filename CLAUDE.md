@@ -4,7 +4,7 @@ Project-specific guidance for Claude Code when working in this repo.
 
 ## Product
 
-Penumbra is a personal inventory app for a traditional film photographer who sells hand-printed darkroom enlargements in limited editions. Core domain entities (not yet modeled): negatives, enlargements, editions, customers, orders. Primarily for the author's own use; eventually openable to other analog photographers.
+Penumbra is a personal inventory app for a traditional film photographer who sells hand-printed darkroom enlargements in limited editions. Modeled so far: customers and supporting lookup tables (customer types, manufacturers, film stocks, paper stocks, developers). Still to come: negatives, enlargements, editions, prints, orders, storage. Primarily for the author's own use; eventually openable to other analog photographers.
 
 ## Stack (decided — don't re-litigate)
 
@@ -37,22 +37,38 @@ Penumbra is a personal inventory app for a traditional film photographer who sel
 
 ## Component conventions
 
-- `src/components/ui/` — shadcn primitives. Add via `pnpm dlx shadcn@latest add <name>`.
-- `src/components/` — domain / layout components (Sidebar, MobileNav, PlaceholderPage, ThemeToggle).
-- `src/routes/` — TanStack Router file-based routes.
+- `src/components/ui/` — shadcn primitives (style `new-york`, base color zinc). Add via `pnpm dlx shadcn@latest add <name>`.
+- `src/components/` — domain / layout components (Sidebar, MobileNav, PlaceholderPage, ThemeToggle, SearchPalette, EnvBadge, …).
+- `src/routes/` — TanStack Router file-based routes, dot-nested (e.g. `customers.$id.tsx` is the layout for `customers.$id.index.tsx` / `.notes.tsx` / `.orders.tsx`; `lookups.tsx` is the layout for `lookups.*`).
 - `src/routeTree.gen.ts` — auto-generated, never edit manually.
+- Path aliases: `#/*` and `@/*` both resolve to `./src/*` (see `tsconfig.json` + `package.json#imports`). Prefer `#/` — it's what the existing code uses.
 - **Brand wordmark** is a two-span monogram: oversized safelight italic "p" + "enumbra" in ink, with `<span className="sr-only">penumbra</span>` for screen readers.
+
+## Server functions
+
+- `src/server/` holds typed RPC handlers built with `createServerFn` from `@tanstack/react-start`. Routes call these directly; there are no REST endpoints.
+- Validate inputs inside the handler — throw plain `Error`s with human messages; callers surface them. See `src/server/manufacturers.ts` for the canonical shape.
+- Every new lookup table also needs an entry in `src/server/search.ts`, which builds the palette index (`SearchItem[]`). Missing it = the entity is invisible to ⌘K.
+
+## Lookup tables (reusable admin pattern)
+
+- All lookup admins (manufacturers, film/paper stocks, developers, customer types) share one pattern. Don't hand-roll a new one.
+- UI: `src/components/lookup/` — `LookupHeader`, `LookupList`, `LookupSearch`, `LookupFormActions`, `LookupRowActions`, `FieldWrap`, `focusSearch`.
+- State: `useLookupAdmin` manages creating/editing/busy/error/query + archive/unarchive callbacks. Default filter: empty query hides archived; non-empty searches across everything including archived.
+- Soft-delete: every lookup row has `archivedAt` — archive, don't delete. Foreign keys use `onDelete: 'restrict'`.
+- Sort: `sortOrder` (int, default 0), then `label`.
 
 ## Data
 
-- Schema: `src/db/schema.ts`.
-- Client: `src/db/client.ts` (better-sqlite3 with WAL and foreign keys).
-- Migrations: generated to `src/db/migrations/` via `pnpm db:generate`; apply with `pnpm db:migrate`.
-- `penumbra.db` is gitignored.
+- Schema: `src/db/schema.ts`. Convention: every table has `createdAt` + `updatedAt` (unix timestamps); lookup tables add `archivedAt`, `sortOrder`, and a `(manufacturerId, code)` unique index where applicable.
+- Client: `src/db/client.ts` — better-sqlite3 with WAL + `foreign_keys = ON`. Exports `db` and `DB` type.
+- DB location: `src/db/paths.ts` — dev uses `./penumbra.db` in the repo root; production writes to the OS data dir (`~/Library/Application Support/penumbra/` on macOS, `%LOCALAPPDATA%\penumbra\` on Windows, `$XDG_DATA_HOME/penumbra/` on Linux). `DATABASE_URL` overrides both. Drizzle Kit uses the same resolver.
+- Migrations: generate to `src/db/migrations/` via `pnpm db:generate`; apply with `pnpm db:migrate`. `penumbra.db` is gitignored.
 
 ## Verification workflow
 
-- Run `pnpm build` for a compile / type / Tailwind check after non-trivial changes.
+- Run `pnpm build` for a compile / type / Tailwind check after non-trivial changes (TS is `strict` + `noUnusedLocals` + `noUnusedParameters` — the build will fail on dead bindings).
+- `pnpm test` runs Vitest (jsdom). No lint step is configured.
 - **Do not auto-start `pnpm dev` or `./run.sh --dev`.** The user runs the dev server manually. A competing dev process grabs port 3000 and bumps the user's to another port, breaking their flow.
 - Prefer static checks. When visual verification is needed, ask the user to reload their running dev server.
 - `agent-browser` CLI is available for UI review when the user requests one and dev is up.
@@ -74,8 +90,7 @@ Penumbra is a personal inventory app for a traditional film photographer who sel
 
 ## Roadmap hints (not implemented)
 
-- Domain model (Negative, Frame, Edition, Print, Customer, Order) — routes exist as placeholders, schemas not yet written.
-- Command palette (⌘K) — design anticipates it, not built.
+- Remaining domain model (Negative, Frame, Edition, Print, Order, Storage) — routes exist as placeholders, schemas not yet written.
 - Authentication / multi-user — not yet needed.
 
 ## Reference: forge
