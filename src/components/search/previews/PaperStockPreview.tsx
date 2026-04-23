@@ -13,13 +13,11 @@ export function PaperStockPreview({ item }: Props) {
   return (
     <PreviewShell
       kicker={item.kicker}
-      groupLabel="Paper stock"
       title={s.label}
-      subtitle={s.manufacturer.label}
-      actionLabel="open list"
+      typeLine={`Paper stock · ${s.manufacturer.label}`}
+      actionLabel="jump to list"
     >
       <FieldList>
-        <FieldRow label="Maker">{s.manufacturer.label}</FieldRow>
         <FieldRow label="Code" mono>
           {s.code}
         </FieldRow>

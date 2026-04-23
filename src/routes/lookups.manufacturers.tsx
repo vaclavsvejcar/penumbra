@@ -10,6 +10,7 @@ import {
   LookupList,
   LookupRowActions,
   LookupSearch,
+  parseFocusSearch,
   useLookupAdmin,
 } from '#/components/lookup'
 import type { Manufacturer } from '#/db/schema'
@@ -24,6 +25,7 @@ import {
 
 export const Route = createFileRoute('/lookups/manufacturers')({
   component: ManufacturersAdmin,
+  validateSearch: parseFocusSearch,
   loader: () => listAllManufacturers(),
 })
 
@@ -38,6 +40,7 @@ const fade = {
 
 function ManufacturersAdmin() {
   const rows = Route.useLoaderData()
+  const { focus } = Route.useSearch()
   const admin = useLookupAdmin({
     rows,
     matchesQuery: (r, q) =>
@@ -78,6 +81,7 @@ function ManufacturersAdmin() {
         creating={admin.creating}
         editingId={admin.editingId}
         emptyMessage="No manufacturers defined yet."
+        focusId={focus}
         renderNewRow={() => (
           <NewRow
             existingOrders={rows.map((r) => r.sortOrder)}

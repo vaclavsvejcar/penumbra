@@ -20,13 +20,11 @@ export function DeveloperPreview({ item }: Props) {
   return (
     <PreviewShell
       kicker={item.kicker}
-      groupLabel="Developer"
       title={d.label}
-      subtitle={d.manufacturer.label}
-      actionLabel="open list"
+      typeLine={`Developer · ${d.manufacturer.label}`}
+      actionLabel="jump to list"
     >
       <FieldList>
-        <FieldRow label="Maker">{d.manufacturer.label}</FieldRow>
         <FieldRow label="Code" mono>
           {d.code}
         </FieldRow>

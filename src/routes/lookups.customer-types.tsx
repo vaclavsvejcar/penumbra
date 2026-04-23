@@ -10,6 +10,7 @@ import {
   LookupList,
   LookupRowActions,
   LookupSearch,
+  parseFocusSearch,
   useLookupAdmin,
 } from '#/components/lookup'
 import type { CustomerType } from '#/db/schema'
@@ -24,6 +25,7 @@ import {
 
 export const Route = createFileRoute('/lookups/customer-types')({
   component: CustomerTypesAdmin,
+  validateSearch: parseFocusSearch,
   loader: () => listAllCustomerTypes(),
 })
 
@@ -38,6 +40,7 @@ const fade = {
 
 function CustomerTypesAdmin() {
   const rows = Route.useLoaderData()
+  const { focus } = Route.useSearch()
   const admin = useLookupAdmin({
     rows,
     matchesQuery: (r, q) =>
@@ -78,6 +81,7 @@ function CustomerTypesAdmin() {
         creating={admin.creating}
         editingId={admin.editingId}
         emptyMessage="No customer types defined yet."
+        focusId={focus}
         renderNewRow={() => (
           <NewTypeRow
             existingOrders={rows.map((r) => r.sortOrder)}

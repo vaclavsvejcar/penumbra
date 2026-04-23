@@ -54,7 +54,7 @@ export function buildNavigationItems(): SearchItem[] {
     type: 'navigation' as const,
     id: n.href,
     title: n.title,
-    kicker: `GO · ${String(i + 1).padStart(2, '0')}`,
+    kicker: `N° ${String(i + 1).padStart(2, '0')}`,
     subtitle: n.subtitle ?? n.group,
     searchText: [n.title, n.group, n.subtitle, n.keywords]
       .filter(Boolean)

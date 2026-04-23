@@ -8,9 +8,9 @@ export function ManufacturerPreview({ item }: Props) {
   return (
     <PreviewShell
       kicker={item.kicker}
-      groupLabel="Manufacturer"
       title={m.label}
-      actionLabel="open list"
+      typeLine="Manufacturer"
+      actionLabel="jump to list"
     >
       <FieldList>
         <FieldRow label="Code" mono>

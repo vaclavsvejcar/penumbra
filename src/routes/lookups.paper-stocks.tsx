@@ -17,6 +17,7 @@ import {
   LookupList,
   LookupRowActions,
   LookupSearch,
+  parseFocusSearch,
   useLookupAdmin,
 } from '#/components/lookup'
 import {
@@ -41,6 +42,7 @@ import {
 
 export const Route = createFileRoute('/lookups/paper-stocks')({
   component: PaperStocksAdmin,
+  validateSearch: parseFocusSearch,
   loader: async () => ({
     stocks: await listAllPaperStocks(),
     manufacturers: await listManufacturers(),
@@ -81,6 +83,7 @@ function contrastDisplay(stock: PaperStockWithManufacturer): string {
 
 function PaperStocksAdmin() {
   const { stocks, manufacturers } = Route.useLoaderData()
+  const { focus } = Route.useSearch()
   const admin = useLookupAdmin({
     rows: stocks,
     matchesQuery: (s, q) =>
@@ -132,6 +135,7 @@ function PaperStocksAdmin() {
         creating={admin.creating}
         editingId={admin.editingId}
         emptyMessage="No paper stocks defined yet."
+        focusId={focus}
         renderNewRow={() => (
           <NewRow
             manufacturers={manufacturers}

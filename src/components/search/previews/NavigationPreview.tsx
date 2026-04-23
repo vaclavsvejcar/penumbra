@@ -7,14 +7,11 @@ export function NavigationPreview({ item }: Props) {
   return (
     <PreviewShell
       kicker={item.kicker}
-      groupLabel="Jump to"
       title={item.title}
+      typeLine={`Jump to · ${item.data.group}`}
       actionLabel="open"
     >
       <FieldList>
-        <FieldRow label="Section" mono>
-          {item.data.group}
-        </FieldRow>
         <FieldRow label="Path" mono>
           {item.data.href}
         </FieldRow>

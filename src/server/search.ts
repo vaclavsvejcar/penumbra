@@ -82,7 +82,7 @@ export const listSearchIndex = createServerFn({ method: 'GET' }).handler(
         type: 'customer',
         id: c.id,
         title: c.name,
-        kicker: `CUST · ${String(c.id).padStart(3, '0')}`,
+        kicker: `N° ${String(c.id).padStart(4, '0')}`,
         subtitle: cityOrType,
         searchText: norm(
           c.name,
@@ -105,7 +105,7 @@ export const listSearchIndex = createServerFn({ method: 'GET' }).handler(
         type: 'customer-type',
         id: t.id,
         title: t.label,
-        kicker: `TYPE · ${t.code}`,
+        kicker: `N° ${String(t.id).padStart(4, '0')}`,
         searchText: norm(t.label, t.code),
         data: t,
       })
@@ -116,7 +116,7 @@ export const listSearchIndex = createServerFn({ method: 'GET' }).handler(
         type: 'manufacturer',
         id: m.id,
         title: m.label,
-        kicker: `MFR · ${m.code}`,
+        kicker: `N° ${String(m.id).padStart(4, '0')}`,
         searchText: norm(m.label, m.code),
         data: m,
       })
@@ -129,7 +129,7 @@ export const listSearchIndex = createServerFn({ method: 'GET' }).handler(
         type: 'film-stock',
         id: s.id,
         title: `${m.label} ${s.label}`,
-        kicker: `FILM · ${s.code}`,
+        kicker: `N° ${String(s.id).padStart(4, '0')}`,
         subtitle: `ISO ${s.iso} · ${s.type.toUpperCase()} · ${s.process.toUpperCase()}`,
         searchText: norm(
           m.label,
@@ -155,7 +155,7 @@ export const listSearchIndex = createServerFn({ method: 'GET' }).handler(
         type: 'paper-stock',
         id: s.id,
         title: `${m.label} ${s.label}`,
-        kicker: `PAPER · ${s.code}`,
+        kicker: `N° ${String(s.id).padStart(4, '0')}`,
         subtitle: `${s.base.toUpperCase()} · ${s.tone} · ${s.contrast}${grade}`,
         searchText: norm(
           m.label,
@@ -181,7 +181,7 @@ export const listSearchIndex = createServerFn({ method: 'GET' }).handler(
         type: 'developer',
         id: d.id,
         title: `${m.label} ${d.label}`,
-        kicker: `DEV · ${d.code}`,
+        kicker: `N° ${String(d.id).padStart(4, '0')}`,
         subtitle: `${d.appliesTo} · ${d.form}`,
         searchText: norm(
           m.label,

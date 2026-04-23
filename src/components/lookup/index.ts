@@ -1,4 +1,6 @@
 export { FieldWrap } from './FieldWrap'
+export { parseFocusSearch } from './focusSearch'
+export type { FocusSearch } from './focusSearch'
 export { LookupFormActions } from './LookupFormActions'
 export { LookupHeader } from './LookupHeader'
 export { LookupList } from './LookupList'

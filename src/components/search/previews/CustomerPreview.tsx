@@ -8,13 +8,11 @@ export function CustomerPreview({ item }: Props) {
   return (
     <PreviewShell
       kicker={item.kicker}
-      groupLabel="Customer"
       title={c.name}
-      subtitle={c.customerType.label}
+      typeLine={`Customer · ${c.customerType.label}`}
       actionLabel="open customer"
     >
       <FieldList>
-        <FieldRow label="Type">{c.customerType.label}</FieldRow>
         {c.city ? <FieldRow label="City">{c.city}</FieldRow> : null}
         {c.email ? (
           <FieldRow label="Email" mono>

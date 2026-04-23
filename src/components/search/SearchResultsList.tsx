@@ -1,4 +1,4 @@
-import { type RefObject, useEffect, useRef } from 'react'
+import { type ReactNode, type RefObject, useEffect, useRef } from 'react'
 import { cn } from '#/lib/utils'
 import type { SearchItem } from '#/lib/search/types'
 
@@ -6,6 +6,7 @@ export type ResultsGroup = {
   key: string
   label: string
   items: ReadonlyArray<SearchItem>
+  total: number
 }
 
 type Props = {
@@ -19,6 +20,26 @@ type Props = {
 
 export function keyFor(item: SearchItem): string {
   return `${item.type}:${item.id}`
+}
+
+/**
+ * Substring highlight. Falls back to plain text when the query is only a
+ * subsequence match (no contiguous span to highlight).
+ */
+function renderHighlighted(text: string, query: string): ReactNode {
+  const q = query.trim()
+  if (!q) return text
+  const idx = text.toLowerCase().indexOf(q.toLowerCase())
+  if (idx === -1) return text
+  return (
+    <>
+      <span className="text-ink-soft">{text.slice(0, idx)}</span>
+      <span className="text-ink font-medium">
+        {text.slice(idx, idx + q.length)}
+      </span>
+      <span className="text-ink-soft">{text.slice(idx + q.length)}</span>
+    </>
+  )
 }
 
 export function SearchResultsList({
@@ -56,13 +77,13 @@ export function SearchResultsList({
   return (
     <div ref={listRef} className="h-full overflow-y-auto">
       {groups.map((group, groupIdx) => (
-        <section
-          key={group.key}
-          className={groupIdx > 0 ? 'mt-2' : undefined}
-        >
-          <p className="kicker border-hairline border-b px-5 pt-4 pb-2">
-            {group.label}
-          </p>
+        <section key={group.key} className={groupIdx > 0 ? 'mt-2' : undefined}>
+          <div className="border-hairline flex items-baseline justify-between border-b px-5 pt-4 pb-2">
+            <p className="kicker">{group.label}</p>
+            <p className="text-ink-muted font-mono text-[0.65rem] tabular-nums">
+              {group.total}
+            </p>
+          </div>
           <ul className="px-2 py-1">
             {group.items.map((item) => {
               const k = keyFor(item)
@@ -81,7 +102,7 @@ export function SearchResultsList({
                       )
                     }
                     className={cn(
-                      'relative flex w-full items-baseline gap-3 rounded-sm px-3 py-2 text-left',
+                      'relative flex w-full flex-col rounded-sm px-3 py-2 text-left',
                       'transition-colors',
                       isActive ? 'bg-muted/50' : 'hover:bg-muted/30',
                     )}
@@ -92,24 +113,19 @@ export function SearchResultsList({
                         className="bg-safelight absolute top-[22%] bottom-[22%] left-0 w-[2px] rounded-r-sm"
                       />
                     ) : null}
-                    <span className="text-ink-muted shrink-0 w-28 font-mono text-[0.7rem] tracking-[0.08em] tabular-nums">
-                      {item.kicker}
+                    <span
+                      className={cn(
+                        'truncate text-sm',
+                        isActive ? 'text-ink font-medium' : 'text-ink',
+                      )}
+                    >
+                      {renderHighlighted(item.title, query)}
                     </span>
-                    <span className="min-w-0 flex-1">
-                      <span
-                        className={cn(
-                          'block truncate text-sm',
-                          isActive ? 'text-ink font-medium' : 'text-ink',
-                        )}
-                      >
-                        {item.title}
+                    {item.subtitle ? (
+                      <span className="text-ink-muted mt-0.5 truncate text-[0.75rem]">
+                        {item.subtitle}
                       </span>
-                      {item.subtitle ? (
-                        <span className="text-ink-muted mt-0.5 block truncate text-[0.75rem]">
-                          {item.subtitle}
-                        </span>
-                      ) : null}
-                    </span>
+                    ) : null}
                   </button>
                 </li>
               )

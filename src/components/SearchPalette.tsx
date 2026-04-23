@@ -46,23 +46,33 @@ type Props = {
 const MAX_PER_GROUP = 6
 const MAX_FLAT = 80
 
-function hrefForItem(item: SearchItem): string {
+type NavTarget = { to: string; search: Record<string, string | number> }
+
+function targetForItem(item: SearchItem): NavTarget {
   switch (item.type) {
     case 'navigation':
-      return item.data.href
+      return { to: item.data.href, search: {} }
     case 'customer':
-      return `/customers/${item.id}`
+      return { to: `/customers/${item.id}`, search: {} }
     case 'customer-type':
-      return '/lookups/customer-types'
+      return { to: '/lookups/customer-types', search: { focus: item.id } }
     case 'manufacturer':
-      return '/lookups/manufacturers'
+      return { to: '/lookups/manufacturers', search: { focus: item.id } }
     case 'film-stock':
-      return '/lookups/film-stocks'
+      return { to: '/lookups/film-stocks', search: { focus: item.id } }
     case 'paper-stock':
-      return '/lookups/paper-stocks'
+      return { to: '/lookups/paper-stocks', search: { focus: item.id } }
     case 'developer':
-      return '/lookups/developers'
+      return { to: '/lookups/developers', search: { focus: item.id } }
   }
+}
+
+function hrefForTarget(target: NavTarget): string {
+  const keys = Object.keys(target.search)
+  if (keys.length === 0) return target.to
+  const params = new URLSearchParams()
+  for (const k of keys) params.set(k, String(target.search[k]))
+  return `${target.to}?${params.toString()}`
 }
 
 export function SearchPalette({ open, onOpenChange }: Props) {
@@ -135,15 +145,21 @@ export function SearchPalette({ open, onOpenChange }: Props) {
       const out: ResultsGroup[] = []
       const recents = resolveRecents(getRecentRefs(), index)
       if (recents.length > 0) {
-        out.push({ key: 'recent', label: 'Recent', items: recents.slice(0, 6) })
+        out.push({
+          key: 'recent',
+          label: 'Recent',
+          items: recents.slice(0, 6),
+          total: recents.length,
+        })
       }
       for (const type of GROUP_ORDER) {
-        const items = index.filter((it) => it.type === type).slice(0, MAX_PER_GROUP)
-        if (items.length > 0) {
+        const all = index.filter((it) => it.type === type)
+        if (all.length > 0) {
           out.push({
             key: type,
             label: groupLabelFor(type),
-            items,
+            items: all.slice(0, MAX_PER_GROUP),
+            total: all.length,
           })
         }
       }
@@ -157,6 +173,7 @@ export function SearchPalette({ open, onOpenChange }: Props) {
           key: scope.itemType,
           label: groupLabelFor(scope.itemType),
           items: scoped.slice(0, MAX_FLAT),
+          total: scoped.length,
         },
       ]
     }
@@ -169,23 +186,32 @@ export function SearchPalette({ open, onOpenChange }: Props) {
           key: scope.itemType,
           label: groupLabelFor(scope.itemType),
           items: scored.map((s) => s.item),
+          total: scored.length,
         },
       ]
     }
 
-    const byType = new Map<SearchItemType, SearchItem[]>()
+    // Global filtered: count per type on full scored set, then cap display items.
+    const totalByType = new Map<SearchItemType, number>()
+    const itemsByType = new Map<SearchItemType, SearchItem[]>()
     for (const s of scored) {
-      const arr = byType.get(s.item.type) ?? []
+      totalByType.set(s.item.type, (totalByType.get(s.item.type) ?? 0) + 1)
+      const arr = itemsByType.get(s.item.type) ?? []
       if (arr.length < MAX_PER_GROUP) {
         arr.push(s.item)
-        byType.set(s.item.type, arr)
+        itemsByType.set(s.item.type, arr)
       }
     }
     const out: ResultsGroup[] = []
     for (const type of GROUP_ORDER) {
-      const items = byType.get(type)
+      const items = itemsByType.get(type)
       if (items && items.length > 0) {
-        out.push({ key: type, label: groupLabelFor(type), items })
+        out.push({
+          key: type,
+          label: groupLabelFor(type),
+          items,
+          total: totalByType.get(type) ?? items.length,
+        })
       }
     }
     return out
@@ -220,16 +246,20 @@ export function SearchPalette({ open, onOpenChange }: Props) {
 
   function activate(item: SearchItem, mode: 'default' | 'new-tab') {
     pushRecent(item.type, item.id)
-    const href = hrefForItem(item)
+    const target = targetForItem(item)
     if (mode === 'new-tab') {
       if (typeof window !== 'undefined') {
-        window.open(href, '_blank', 'noopener')
+        window.open(hrefForTarget(target), '_blank', 'noopener')
       }
       return
     }
     onOpenChange(false)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    navigate({ to: href as any })
+    navigate({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      to: target.to as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      search: target.search as any,
+    })
   }
 
   function commitScopeFromFragment(fragment: string): boolean {

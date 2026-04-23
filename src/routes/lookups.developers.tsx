@@ -17,6 +17,7 @@ import {
   LookupList,
   LookupRowActions,
   LookupSearch,
+  parseFocusSearch,
   useLookupAdmin,
 } from '#/components/lookup'
 import {
@@ -39,6 +40,7 @@ import { listManufacturers } from '#/server/manufacturers'
 
 export const Route = createFileRoute('/lookups/developers')({
   component: DevelopersAdmin,
+  validateSearch: parseFocusSearch,
   loader: async () => ({
     developers: await listAllDevelopers(),
     manufacturers: await listManufacturers(),
@@ -68,6 +70,7 @@ const formLabels: Record<DeveloperForm, string> = {
 
 function DevelopersAdmin() {
   const { developers, manufacturers } = Route.useLoaderData()
+  const { focus } = Route.useSearch()
   const admin = useLookupAdmin({
     rows: developers,
     matchesQuery: (d, q) =>
@@ -119,6 +122,7 @@ function DevelopersAdmin() {
         creating={admin.creating}
         editingId={admin.editingId}
         emptyMessage="No developers defined yet."
+        focusId={focus}
         renderNewRow={() => (
           <NewRow
             manufacturers={manufacturers}

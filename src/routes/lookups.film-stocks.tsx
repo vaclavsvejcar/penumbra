@@ -17,6 +17,7 @@ import {
   LookupList,
   LookupRowActions,
   LookupSearch,
+  parseFocusSearch,
   useLookupAdmin,
 } from '#/components/lookup'
 import {
@@ -39,6 +40,7 @@ import { listManufacturers } from '#/server/manufacturers'
 
 export const Route = createFileRoute('/lookups/film-stocks')({
   component: FilmStocksAdmin,
+  validateSearch: parseFocusSearch,
   loader: async () => ({
     stocks: await listAllFilmStocks(),
     manufacturers: await listManufacturers(),
@@ -69,6 +71,7 @@ const processLabels: Record<FilmProcess, string> = {
 
 function FilmStocksAdmin() {
   const { stocks, manufacturers } = Route.useLoaderData()
+  const { focus } = Route.useSearch()
   const admin = useLookupAdmin({
     rows: stocks,
     matchesQuery: (s, q) =>
@@ -120,6 +123,7 @@ function FilmStocksAdmin() {
         creating={admin.creating}
         editingId={admin.editingId}
         emptyMessage="No film stocks defined yet."
+        focusId={focus}
         renderNewRow={() => (
           <NewRow
             manufacturers={manufacturers}

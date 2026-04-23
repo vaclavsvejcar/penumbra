@@ -102,12 +102,14 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
           )}
         >
           <span className="text-ink-muted group-hover/search:text-ink-soft flex items-center gap-2 transition-colors">
-            <Search className="h-3.5 w-3.5" aria-hidden />
-            <span className="font-serif text-[0.9rem] italic">Search…</span>
+            <Search className="h-4 w-4" aria-hidden />
+            <span className="font-serif text-[0.9rem] italic">
+              Search the archive…
+            </span>
           </span>
-          <span className="text-ink-muted font-mono text-[0.65rem] tabular-nums">
+          <kbd className="border-hairline text-ink-muted rounded-sm border px-1.5 py-px font-mono text-[0.65rem] leading-none tabular-nums">
             ⌘K
-          </span>
+          </kbd>
         </button>
       </div>
 

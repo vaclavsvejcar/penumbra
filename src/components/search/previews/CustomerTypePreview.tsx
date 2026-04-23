@@ -8,9 +8,9 @@ export function CustomerTypePreview({ item }: Props) {
   return (
     <PreviewShell
       kicker={item.kicker}
-      groupLabel="Customer type"
       title={t.label}
-      actionLabel="open list"
+      typeLine="Customer type"
+      actionLabel="jump to list"
     >
       <FieldList>
         <FieldRow label="Code" mono>
