@@ -19,6 +19,8 @@ Penumbra is a personal inventory app for a traditional film photographer who sel
 
 ## Design principles
 
+**Full visual-language guide: [`docs/design.md`](docs/design.md)** — read first when making non-trivial visual decisions. The bullets below are the load-bearing rules in short form.
+
 - **B/W/red palette in OKLCH**, defined in `src/styles.css` and exposed to Tailwind through an `@theme` block. Use tokens (`bg-paper`, `text-ink`, `text-ink-soft`, `border-hairline`, `bg-safelight`, …) — never hex or named colors.
 - **Safelight red is the brand accent, not decoration.** Reserved for: the brand monogram, active state signals (active nav, sold out), and the primary commit action in forms (Save/Add, via `variant="safelight"`). Don't scatter it as a passive accent.
 - **Destructive actions use `variant="destructive-outline"`** — red border + red text on transparent background, never a solid fill. Structural outline-vs-fill is the signal that distinguishes "commit" (safelight fill) from "dangerous" (red outline). Always pair with a confirmation step.
@@ -33,12 +35,12 @@ Penumbra is a personal inventory app for a traditional film photographer who sel
 - **Desktop (≥ md):** left sidebar (240px, hairline right border) + content column. No footer — removed intentionally.
 - **Mobile (< md):** slim top bar with brand + hamburger; sidebar content lives inside a shadcn Sheet drawer sliding from left.
 - Content column `max-w-[1120px] mx-auto`, horizontal padding `px-6 md:px-10 lg:px-16`.
-- Sidebar bottom row: `v0.1.0` (mono) · GitHub link · theme toggle.
+- Sidebar bottom row: a single `v0.1.0` + chevron trigger that opens the About dialog (brand, tagline, Source on GitHub, appearance selector). Consolidates what used to be three separate footer elements.
 
 ## Component conventions
 
 - `src/components/ui/` — shadcn primitives (style `new-york`, base color zinc). Add via `pnpm dlx shadcn@latest add <name>`.
-- `src/components/` — domain / layout components (Sidebar, MobileNav, PlaceholderPage, ThemeToggle, SearchPalette, EnvBadge, …).
+- `src/components/` — domain / layout components (Sidebar, MobileNav, AboutDialog, ThemeProvider, PlaceholderPage, SearchPalette, EnvBadge, …).
 - `src/routes/` — TanStack Router file-based routes, dot-nested (e.g. `customers.$id.tsx` is the layout for `customers.$id.index.tsx` / `.notes.tsx` / `.orders.tsx`; `lookups.tsx` is the layout for `lookups.*`).
 - `src/routeTree.gen.ts` — auto-generated, never edit manually.
 - Path aliases: `#/*` and `@/*` both resolve to `./src/*` (see `tsconfig.json` + `package.json#imports`). Prefer `#/` — it's what the existing code uses.
@@ -82,7 +84,7 @@ Penumbra is a personal inventory app for a traditional film photographer who sel
 ## Lessons learned (don't redo)
 
 - No `Header.tsx` — the Sidebar carries brand and nav.
-- No `Footer.tsx` — version, GitHub link, and theme toggle live at sidebar bottom.
+- No `Footer.tsx` — sidebar bottom is a single `v0.1.0` chevron trigger opening the About dialog (which holds brand, Source on GitHub, appearance selector).
 - No pulsing safelight dots — reads as a gimmicky live-indicator, not editorial.
 - No text-shadow "misregistration" logo effect — reads as Y2K / bad print.
 - No red dot for active nav — use the vertical safelight bar.
