@@ -90,7 +90,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
         </Link>
       </div>
 
-      <div className="px-4 pb-4">
+      <div className="hidden px-4 pb-4 md:block">
         <button
           type="button"
           onClick={handleSearchClick}

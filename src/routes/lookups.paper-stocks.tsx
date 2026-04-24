@@ -12,6 +12,7 @@ import {
 } from '#/components/ui/select'
 import {
   FieldWrap,
+  LookupArchiveConfirm,
   LookupFormActions,
   LookupHeader,
   LookupList,
@@ -159,10 +160,17 @@ function PaperStocksAdmin() {
             stock={s}
             busy={admin.busy}
             onEdit={() => admin.startEditing(s.id)}
-            onArchive={() => admin.handleArchive(s.id)}
+            onArchive={() => admin.requestArchive(s.id, s.label)}
             onUnarchive={() => admin.handleUnarchive(s.id)}
           />
         )}
+      />
+
+      <LookupArchiveConfirm
+        pending={admin.pendingArchive}
+        entityLabel="paper stock"
+        onCancel={admin.cancelArchive}
+        onConfirm={admin.confirmArchive}
       />
     </motion.div>
   )

@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { motion } from 'motion/react'
 
 export const Route = createFileRoute('/')({ component: Home })
@@ -62,19 +62,32 @@ function Home() {
         variants={item}
         className="border-hairline mt-16 grid grid-cols-3 border-t"
       >
-        <Stat label="Negatives" value="—" />
-        <Stat label="Editions" value="—" />
-        <Stat label="Prints" value="—" />
+        <Stat label="Negatives" value="—" to="/negatives" />
+        <Stat label="Editions" value="—" to="/editions" />
+        <Stat label="Prints" value="—" to="/prints" />
       </motion.div>
     </motion.section>
   )
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  label,
+  value,
+  to,
+}: {
+  label: string
+  value: string
+  to: string
+}) {
   return (
-    <div className="border-hairline first:border-l-0 border-l py-5 pl-6 first:pl-0">
-      <p className="kicker mb-2">{label}</p>
+    <Link
+      to={to}
+      className="group border-hairline hover:bg-muted/40 first:border-l-0 border-l py-5 pl-6 transition-colors first:pl-0"
+    >
+      <p className="kicker group-hover:text-ink mb-2 transition-colors">
+        {label}
+      </p>
       <p className="font-mono text-ink text-3xl tabular-nums">{value}</p>
-    </div>
+    </Link>
   )
 }

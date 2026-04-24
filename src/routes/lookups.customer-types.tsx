@@ -5,6 +5,7 @@ import { Badge } from '#/components/ui/badge'
 import { Input } from '#/components/ui/input'
 import {
   FieldWrap,
+  LookupArchiveConfirm,
   LookupFormActions,
   LookupHeader,
   LookupList,
@@ -103,10 +104,17 @@ function CustomerTypesAdmin() {
             type={t}
             busy={admin.busy}
             onEdit={() => admin.startEditing(t.id)}
-            onArchive={() => admin.handleArchive(t.id)}
+            onArchive={() => admin.requestArchive(t.id, t.label)}
             onUnarchive={() => admin.handleUnarchive(t.id)}
           />
         )}
+      />
+
+      <LookupArchiveConfirm
+        pending={admin.pendingArchive}
+        entityLabel="customer type"
+        onCancel={admin.cancelArchive}
+        onConfirm={admin.confirmArchive}
       />
     </motion.div>
   )

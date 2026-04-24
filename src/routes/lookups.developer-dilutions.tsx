@@ -12,6 +12,7 @@ import {
 } from '#/components/ui/select'
 import {
   FieldWrap,
+  LookupArchiveConfirm,
   LookupFormActions,
   LookupHeader,
   LookupList,
@@ -132,10 +133,17 @@ function DeveloperDilutionsAdmin() {
             dilution={d}
             busy={admin.busy}
             onEdit={() => admin.startEditing(d.id)}
-            onArchive={() => admin.handleArchive(d.id)}
+            onArchive={() => admin.requestArchive(d.id, d.label)}
             onUnarchive={() => admin.handleUnarchive(d.id)}
           />
         )}
+      />
+
+      <LookupArchiveConfirm
+        pending={admin.pendingArchive}
+        entityLabel="dilution"
+        onCancel={admin.cancelArchive}
+        onConfirm={admin.confirmArchive}
       />
     </motion.div>
   )

@@ -32,6 +32,10 @@ export function useLookupAdmin<T extends ArchivableRow>(
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
+  const [pendingArchive, setPendingArchive] = useState<{
+    id: number
+    label: string
+  } | null>(null)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -55,10 +59,18 @@ export function useLookupAdmin<T extends ArchivableRow>(
     [router],
   )
 
-  const handleArchive = useCallback(
-    (id: number) => runAction(() => archiveFn({ data: id }), 'Archive failed.'),
-    [archiveFn, runAction],
-  )
+  const requestArchive = useCallback((id: number, label: string) => {
+    setPendingArchive({ id, label })
+  }, [])
+
+  const cancelArchive = useCallback(() => setPendingArchive(null), [])
+
+  const confirmArchive = useCallback(async () => {
+    if (!pendingArchive) return
+    const id = pendingArchive.id
+    await runAction(() => archiveFn({ data: id }), 'Archive failed.')
+    setPendingArchive(null)
+  }, [pendingArchive, archiveFn, runAction])
 
   const handleUnarchive = useCallback(
     (id: number) =>
@@ -94,6 +106,7 @@ export function useLookupAdmin<T extends ArchivableRow>(
     error,
     query,
     filtered,
+    pendingArchive,
     setQuery,
     clearQuery,
     setError,
@@ -101,7 +114,9 @@ export function useLookupAdmin<T extends ArchivableRow>(
     startEditing,
     cancelCreating,
     cancelEditing,
-    handleArchive,
+    requestArchive,
+    cancelArchive,
+    confirmArchive,
     handleUnarchive,
     reloadAfterSave,
   }

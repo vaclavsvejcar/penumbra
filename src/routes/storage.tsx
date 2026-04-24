@@ -54,12 +54,31 @@ function totalBytes(files: StorageFile[]): number {
   return files.reduce((sum, f) => sum + (f.bytes ?? 0), 0)
 }
 
+function splitCommonParent(files: StorageFile[]): {
+  parent: string | null
+  names: Map<string, string>
+} {
+  const names = new Map<string, string>()
+  if (files.length === 0) return { parent: null, names }
+  const parts = files.map((f) => {
+    const idx = f.path.lastIndexOf('/')
+    return idx === -1
+      ? { dir: '', file: f.path }
+      : { dir: f.path.slice(0, idx), file: f.path.slice(idx + 1) }
+  })
+  const firstDir = parts[0].dir
+  const allSameDir = parts.every((p) => p.dir === firstDir)
+  files.forEach((f, i) => names.set(f.path, parts[i].file))
+  return { parent: allSameDir ? firstDir : null, names }
+}
+
 function StoragePage() {
   const info = Route.useLoaderData()
   const { database, files, tables } = info
   const total = totalBytes(files)
   const usedBytes = database.pageCount * database.pageSize
   const freeBytes = database.freelistCount * database.pageSize
+  const { parent, names } = splitCommonParent(files)
 
   return (
     <motion.section
@@ -122,6 +141,11 @@ function StoragePage() {
 
       <motion.div variants={item} className="mt-14">
         <p className="kicker mb-4">Files</p>
+        {parent ? (
+          <p className="text-ink-muted mb-3 truncate font-mono text-xs">
+            {parent}/
+          </p>
+        ) : null}
         <ul className="border-hairline border-t">
           {files.map((f) => (
             <li
@@ -130,17 +154,17 @@ function StoragePage() {
             >
               <span className="text-ink text-sm font-medium">{f.label}</span>
               <span className="text-ink-muted truncate font-mono text-xs">
-                {f.path}
+                {parent ? names.get(f.path) : f.path}
               </span>
               <span className="text-ink text-right font-mono text-xs tabular-nums">
                 {formatBytes(f.bytes)}
               </span>
             </li>
           ))}
-          <li className="grid grid-cols-[6rem_1fr_auto] items-center gap-6 py-3.5">
+          <li className="grid grid-cols-[6rem_1fr_auto] items-center gap-6 py-4">
             <span className="kicker">Total</span>
             <span />
-            <span className="text-ink text-right font-mono text-xs font-medium tabular-nums">
+            <span className="text-ink text-right font-mono text-sm font-medium tabular-nums">
               {formatBytes(total)}
             </span>
           </li>

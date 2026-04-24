@@ -5,6 +5,7 @@ import { Badge } from '#/components/ui/badge'
 import { Input } from '#/components/ui/input'
 import {
   FieldWrap,
+  LookupArchiveConfirm,
   LookupFormActions,
   LookupHeader,
   LookupList,
@@ -103,10 +104,17 @@ function ManufacturersAdmin() {
             manufacturer={m}
             busy={admin.busy}
             onEdit={() => admin.startEditing(m.id)}
-            onArchive={() => admin.handleArchive(m.id)}
+            onArchive={() => admin.requestArchive(m.id, m.label)}
             onUnarchive={() => admin.handleUnarchive(m.id)}
           />
         )}
+      />
+
+      <LookupArchiveConfirm
+        pending={admin.pendingArchive}
+        entityLabel="manufacturer"
+        onCancel={admin.cancelArchive}
+        onConfirm={admin.confirmArchive}
       />
     </motion.div>
   )
