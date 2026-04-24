@@ -15,44 +15,44 @@ const NAV: ReadonlyArray<NavSpec> = [
   { title: 'Prints', href: '/prints', group: 'Archive' },
   { title: 'Customers', href: '/customers', group: 'Orders' },
   { title: 'Orders', href: '/orders', group: 'Orders' },
-  { title: 'Lookups', href: '/lookups', group: 'Settings' },
+  { title: 'Lookups', href: '/lookups', group: 'Admin' },
   {
     title: 'Customer types',
     href: '/lookups/customer-types',
-    group: 'Settings',
+    group: 'Admin',
     subtitle: 'Lookup',
   },
   {
     title: 'Manufacturers',
     href: '/lookups/manufacturers',
-    group: 'Settings',
+    group: 'Admin',
     subtitle: 'Lookup',
   },
   {
     title: 'Film stocks',
     href: '/lookups/film-stocks',
-    group: 'Settings',
+    group: 'Admin',
     subtitle: 'Lookup',
   },
   {
     title: 'Paper stocks',
     href: '/lookups/paper-stocks',
-    group: 'Settings',
+    group: 'Admin',
     subtitle: 'Lookup',
   },
   {
     title: 'Developers',
     href: '/lookups/developers',
-    group: 'Settings',
+    group: 'Admin',
     subtitle: 'Lookup',
   },
   {
     title: 'Developer dilutions',
     href: '/lookups/developer-dilutions',
-    group: 'Settings',
+    group: 'Admin',
     subtitle: 'Lookup',
   },
-  { title: 'Storage', href: '/storage', group: 'Settings' },
+  { title: 'Storage', href: '/storage', group: 'Admin' },
 ]
 
 export function buildNavigationItems(): SearchItem[] {

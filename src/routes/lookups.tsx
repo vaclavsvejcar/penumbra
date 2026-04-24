@@ -45,7 +45,7 @@ function LookupsLayout() {
       variants={container}
     >
       <motion.div variants={item}>
-        <p className="kicker mb-4">Settings</p>
+        <p className="kicker mb-4">Admin</p>
         <h1 className="font-serif text-ink mb-4 text-5xl leading-[0.95] font-normal tracking-tight italic sm:text-6xl">
           Lookups
         </h1>

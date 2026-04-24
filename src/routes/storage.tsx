@@ -88,7 +88,7 @@ function StoragePage() {
       variants={container}
     >
       <motion.p variants={item} className="kicker mb-4">
-        Settings
+        Admin
       </motion.p>
       <motion.h1
         variants={item}
