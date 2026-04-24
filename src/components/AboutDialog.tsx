@@ -118,22 +118,30 @@ function ThemeRow() {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
       <span className="kicker">Appearance</span>
-      <div className="flex items-center gap-1">
+      <div
+        role="radiogroup"
+        aria-label="Appearance"
+        className={cn(
+          'border-hairline inline-flex items-stretch overflow-hidden rounded-sm border',
+          '[&>button+button]:border-hairline [&>button+button]:border-l',
+        )}
+      >
         {themeOptions.map((opt) => {
           const isActive = opt.value === mode
           return (
             <button
               key={opt.value}
               type="button"
-              aria-pressed={isActive}
+              role="radio"
+              aria-checked={isActive}
               onClick={() => {
                 if (!isActive) setMode(opt.value)
               }}
               className={cn(
-                'rounded-sm px-2 py-0.5 text-sm transition-colors',
+                'px-3 py-1 text-sm transition-colors',
                 isActive
-                  ? 'bg-muted text-ink'
-                  : 'text-ink-muted hover:bg-muted/50 hover:text-ink',
+                  ? 'bg-ink/10 text-ink'
+                  : 'text-ink-muted hover:bg-ink/5 hover:text-ink',
               )}
             >
               {opt.label}
