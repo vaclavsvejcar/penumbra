@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Monitor, Moon, Sun } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '#/components/ui/dropdown-menu'
 
 type ThemeMode = 'light' | 'dark' | 'auto'
 
@@ -32,10 +39,19 @@ function applyThemeMode(mode: ThemeMode) {
   document.documentElement.style.colorScheme = resolved
 }
 
-const modeLabels: Record<ThemeMode, string> = {
-  light: 'Light theme. Click to switch to dark.',
-  dark: 'Dark theme. Click to switch to auto.',
-  auto: 'Auto theme (system). Click to switch to light.',
+const modes = [
+  { value: 'light', label: 'Light', icon: Sun },
+  { value: 'auto', label: 'System', icon: Monitor },
+  { value: 'dark', label: 'Dark', icon: Moon },
+] as const satisfies ReadonlyArray<{
+  value: ThemeMode
+  label: string
+  icon: typeof Sun
+}>
+
+function getTriggerIcon(mode: ThemeMode): typeof Sun {
+  if (mode === 'auto') return Monitor
+  return mode === 'dark' ? Moon : Sun
 }
 
 export default function ThemeToggle() {
@@ -61,25 +77,38 @@ export default function ThemeToggle() {
     }
   }, [mode])
 
-  function toggleMode() {
-    const nextMode: ThemeMode =
-      mode === 'light' ? 'dark' : mode === 'dark' ? 'auto' : 'light'
-    setMode(nextMode)
-    applyThemeMode(nextMode)
-    window.localStorage.setItem('theme', nextMode)
+  function selectMode(next: string) {
+    if (next !== 'light' && next !== 'dark' && next !== 'auto') {
+      return
+    }
+    if (next === mode) {
+      return
+    }
+    setMode(next)
+    applyThemeMode(next)
+    window.localStorage.setItem('theme', next)
   }
 
-  const Icon = mode === 'light' ? Sun : mode === 'dark' ? Moon : Monitor
+  const TriggerIcon = getTriggerIcon(mode)
 
   return (
-    <button
-      type="button"
-      onClick={toggleMode}
-      aria-label={modeLabels[mode]}
-      title={modeLabels[mode]}
-      className="text-ink-soft hover:text-ink hover:bg-muted inline-flex h-8 w-8 items-center justify-center rounded-sm transition-colors"
-    >
-      <Icon className="h-4 w-4" aria-hidden />
-    </button>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        aria-label="Theme"
+        className="text-ink-soft hover:text-ink hover:bg-muted data-[state=open]:bg-muted data-[state=open]:text-ink inline-flex h-8 w-8 items-center justify-center rounded-sm transition-colors"
+      >
+        <TriggerIcon className="h-4 w-4" aria-hidden />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" side="top" sideOffset={6}>
+        <DropdownMenuRadioGroup value={mode} onValueChange={selectMode}>
+          {modes.map(({ value, label, icon: Icon }) => (
+            <DropdownMenuRadioItem key={value} value={value}>
+              <Icon className="h-4 w-4" aria-hidden />
+              {label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
