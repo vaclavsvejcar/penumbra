@@ -8,9 +8,11 @@ type Props = {
   value: string
   scope: ScopeDef | null
   slashMode: boolean
+  activeCommand: { title: string } | null
   pendingScopeFragment: string | null
   onChange: (next: string) => void
   onClearScope: () => void
+  onExitCommand: () => void
   onCommitScope: (scope: ScopeDef) => void
   onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void
   inputRef: RefObject<HTMLInputElement | null>
@@ -20,27 +22,32 @@ export function SearchPrompt({
   value,
   scope,
   slashMode,
+  activeCommand,
   pendingScopeFragment,
   onChange,
   onClearScope,
+  onExitCommand,
   onCommitScope,
   onKeyDown,
   inputRef,
 }: Props) {
   // Keep focus on the input whenever the "mode" shifts (scope on/off, slash
-  // on/off). Without this the decorative toggles could steal focus via re-render.
+  // on/off, drill-in). Without this the decorative toggles could steal focus
+  // via re-render.
   useEffect(() => {
     inputRef.current?.focus()
-  }, [scope, slashMode, inputRef])
+  }, [scope, slashMode, activeCommand, inputRef])
 
   const suggestions =
     pendingScopeFragment !== null ? suggestScopes(pendingScopeFragment) : []
 
-  const placeholder = scope
-    ? `Search ${scope.label.toLowerCase()}…`
-    : slashMode
-      ? 'Type a scope code…'
-      : 'Search the archive…'
+  const placeholder = activeCommand
+    ? `Pick ${activeCommand.title.toLowerCase()}…`
+    : scope
+      ? `Search ${scope.label.toLowerCase()}…`
+      : slashMode
+        ? 'Type a scope code…'
+        : 'Search the archive…'
 
   return (
     <div className="relative">
@@ -75,6 +82,29 @@ export function SearchPrompt({
           >
             {scope.code}
           </button>
+        ) : null}
+
+        {activeCommand ? (
+          <>
+            <span
+              aria-hidden
+              className="text-ink-muted shrink-0 font-mono text-xs leading-none select-none"
+            >
+              ›
+            </span>
+            <button
+              type="button"
+              onClick={onExitCommand}
+              aria-label={`Leave ${activeCommand.title}`}
+              className={cn(
+                'border-hairline-strong text-ink shrink-0 rounded-sm border px-2 py-0.5',
+                'font-serif text-sm leading-none italic',
+                'hover:border-safelight hover:text-safelight transition-colors',
+              )}
+            >
+              {activeCommand.title}
+            </button>
+          </>
         ) : null}
 
         <input

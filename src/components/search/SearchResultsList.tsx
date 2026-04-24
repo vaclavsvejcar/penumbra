@@ -22,6 +22,10 @@ export function keyFor(item: SearchItem): string {
   return `${item.type}:${item.id}`
 }
 
+function hasOptions(item: SearchItem): boolean {
+  return item.type === 'command' && item.data.kind === 'options'
+}
+
 /**
  * Substring highlight. Falls back to plain text when the query is only a
  * subsequence match (no contiguous span to highlight).
@@ -102,7 +106,7 @@ export function SearchResultsList({
                       )
                     }
                     className={cn(
-                      'relative flex w-full flex-col rounded-sm px-3 py-2 text-left',
+                      'relative flex w-full items-center gap-3 rounded-sm px-3 py-2 text-left',
                       'transition-colors',
                       isActive ? 'bg-muted/50' : 'hover:bg-muted/30',
                     )}
@@ -113,17 +117,30 @@ export function SearchResultsList({
                         className="bg-safelight absolute top-[22%] bottom-[22%] left-0 w-[2px] rounded-r-sm"
                       />
                     ) : null}
-                    <span
-                      className={cn(
-                        'truncate text-sm',
-                        isActive ? 'text-ink font-medium' : 'text-ink',
-                      )}
-                    >
-                      {renderHighlighted(item.title, query)}
-                    </span>
-                    {item.subtitle ? (
-                      <span className="text-ink-muted mt-0.5 truncate text-[0.75rem]">
-                        {item.subtitle}
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span
+                        className={cn(
+                          'truncate text-sm',
+                          isActive ? 'text-ink font-medium' : 'text-ink',
+                        )}
+                      >
+                        {renderHighlighted(item.title, query)}
+                      </span>
+                      {item.subtitle ? (
+                        <span className="text-ink-muted mt-0.5 truncate text-[0.75rem]">
+                          {item.subtitle}
+                        </span>
+                      ) : null}
+                    </div>
+                    {hasOptions(item) ? (
+                      <span
+                        aria-hidden
+                        className={cn(
+                          'shrink-0 font-mono text-base leading-none transition-colors',
+                          isActive ? 'text-ink-soft' : 'text-ink-muted',
+                        )}
+                      >
+                        ›
                       </span>
                     ) : null}
                   </button>

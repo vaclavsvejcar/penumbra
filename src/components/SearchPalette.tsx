@@ -8,7 +8,9 @@ import {
 } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { cn } from '#/lib/utils'
+import { useTheme } from './ThemeProvider'
 import { filterAndScore } from '#/lib/search/score'
+import { buildCommandItems } from '#/lib/search/commands'
 import { buildNavigationItems } from '#/lib/search/navigation'
 import {
   parsePrompt,
@@ -48,8 +50,10 @@ const MAX_FLAT = 80
 
 type NavTarget = { to: string; search: Record<string, string | number> }
 
-function targetForItem(item: SearchItem): NavTarget {
+function targetForItem(item: SearchItem): NavTarget | null {
   switch (item.type) {
+    case 'command':
+      return null
     case 'navigation':
       return { to: item.data.href, search: {} }
     case 'customer':
@@ -89,6 +93,7 @@ function hrefForTarget(target: NavTarget): string {
 
 export function SearchPalette({ open, onOpenChange }: Props) {
   const navigate = useNavigate()
+  const { mode: currentTheme, setMode: setTheme } = useTheme()
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -97,6 +102,7 @@ export function SearchPalette({ open, onOpenChange }: Props) {
   const [raw, setRaw] = useState('')
   const [scope, setScope] = useState<ScopeDef | null>(null)
   const [slashMode, setSlashMode] = useState(false)
+  const [activeCommandId, setActiveCommandId] = useState<string | null>(null)
   const [highlightedKey, setHighlightedKey] = useState<string | null>(null)
 
   // Lazy-load the remote index on first open; reload on each subsequent open so
@@ -120,12 +126,40 @@ export function SearchPalette({ open, onOpenChange }: Props) {
     }
   }, [open])
 
+  // Commands are built at render-time so their "active" state and callbacks
+  // track the current theme without needing an index reload.
+  const commands = useMemo<SearchItem[]>(
+    () => buildCommandItems({ setTheme, currentTheme }),
+    [setTheme, currentTheme],
+  )
+
+  // Resolve activeCommand from id against the freshly-built commands list so
+  // that option labels/callbacks track the live theme state.
+  const activeCommand = useMemo(() => {
+    if (!activeCommandId) return null
+    const found = commands.find(
+      (c) => c.type === 'command' && c.id === activeCommandId,
+    )
+    return found && found.type === 'command' && found.data.kind === 'options'
+      ? found
+      : null
+  }, [commands, activeCommandId])
+
+  const allItems = useMemo<SearchItem[] | null>(() => {
+    if (activeCommand && activeCommand.data.kind === 'options') {
+      return [...activeCommand.data.options]
+    }
+    if (!index) return null
+    return [...commands, ...index]
+  }, [index, commands, activeCommand])
+
   // Reset prompt whenever the palette closes.
   useEffect(() => {
     if (!open) {
       setRaw('')
       setScope(null)
       setSlashMode(false)
+      setActiveCommandId(null)
       setHighlightedKey(null)
     }
   }, [open])
@@ -145,17 +179,34 @@ export function SearchPalette({ open, onOpenChange }: Props) {
   }, [parsed, scope])
 
   const groups = useMemo<ResultsGroup[]>(() => {
-    if (!index) return []
+    if (!allItems) return []
 
     const effectiveQuery = parsed.query.trim()
+
+    // Drill-in: show just the active command's options (optionally filtered).
+    if (activeCommand) {
+      const base = effectiveQuery
+        ? filterAndScore(allItems, effectiveQuery).map((s) => s.item)
+        : [...allItems]
+      if (base.length === 0) return []
+      return [
+        {
+          key: 'options',
+          label: activeCommand.title,
+          items: base,
+          total: base.length,
+        },
+      ]
+    }
+
     const scoped = scope
-      ? index.filter((it) => it.type === scope.itemType)
-      : index
+      ? allItems.filter((it) => it.type === scope.itemType)
+      : allItems
 
     // Empty query + global → show Recents on top, then each group by first few.
     if (!effectiveQuery && !scope) {
       const out: ResultsGroup[] = []
-      const recents = resolveRecents(getRecentRefs(), index)
+      const recents = resolveRecents(getRecentRefs(), allItems)
       if (recents.length > 0) {
         out.push({
           key: 'recent',
@@ -165,7 +216,7 @@ export function SearchPalette({ open, onOpenChange }: Props) {
         })
       }
       for (const type of GROUP_ORDER) {
-        const all = index.filter((it) => it.type === type)
+        const all = allItems.filter((it) => it.type === type)
         if (all.length > 0) {
           out.push({
             key: type,
@@ -227,7 +278,7 @@ export function SearchPalette({ open, onOpenChange }: Props) {
       }
     }
     return out
-  }, [index, parsed.query, scope])
+  }, [allItems, parsed.query, scope, activeCommand])
 
   const flatItems = useMemo(() => groups.flatMap((g) => g.items), [groups])
 
@@ -257,8 +308,26 @@ export function SearchPalette({ open, onOpenChange }: Props) {
   }
 
   function activate(item: SearchItem, mode: 'default' | 'new-tab') {
+    if (item.type === 'command') {
+      // Commands aren't pushed to recents — they're verbs, not records.
+      if (item.data.kind === 'run') {
+        onOpenChange(false)
+        item.data.run()
+        return
+      }
+      if (item.data.kind === 'options') {
+        setActiveCommandId(item.id)
+        setRaw('')
+        setHighlightedKey(null)
+        return
+      }
+      return
+    }
+
     pushRecent(item.type, item.id)
     const target = targetForItem(item)
+    if (!target) return
+
     if (mode === 'new-tab') {
       if (typeof window !== 'undefined') {
         window.open(hrefForTarget(target), '_blank', 'noopener')
@@ -348,6 +417,11 @@ export function SearchPalette({ open, onOpenChange }: Props) {
         setSlashMode(false)
         return
       }
+      if (activeCommandId) {
+        e.preventDefault()
+        setActiveCommandId(null)
+        return
+      }
       if (scope) {
         e.preventDefault()
         setScope(null)
@@ -389,9 +463,13 @@ export function SearchPalette({ open, onOpenChange }: Props) {
               value={raw}
               scope={scope}
               slashMode={slashMode}
+              activeCommand={
+                activeCommand ? { title: activeCommand.title } : null
+              }
               pendingScopeFragment={parsed.pendingScopeFragment}
               onChange={handlePromptChange}
               onClearScope={() => setScope(null)}
+              onExitCommand={() => setActiveCommandId(null)}
               onCommitScope={(s) => {
                 setScope(s)
                 setSlashMode(false)
@@ -404,7 +482,7 @@ export function SearchPalette({ open, onOpenChange }: Props) {
 
           <div className="grid grid-cols-[320px_1fr] h-[min(520px,62vh)]">
             <div className="border-hairline overflow-hidden border-r">
-              {index === null ? (
+              {index === null && !activeCommand ? (
                 <LoadingState error={loadError} />
               ) : (
                 <SearchResultsList
@@ -418,7 +496,9 @@ export function SearchPalette({ open, onOpenChange }: Props) {
               )}
             </div>
             <div className="overflow-hidden">
-              {index === null ? null : <SearchPreviewPane item={activeItem} />}
+              {index === null && !activeCommand ? null : (
+                <SearchPreviewPane item={activeItem} />
+              )}
             </div>
           </div>
         </DialogPrimitive.Content>

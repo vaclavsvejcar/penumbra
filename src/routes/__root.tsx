@@ -5,6 +5,7 @@ import Sidebar from '../components/Sidebar'
 import MobileNav from '../components/MobileNav'
 import EnvBadge from '../components/EnvBadge'
 import { SearchProvider } from '../components/SearchProvider'
+import { ThemeProvider } from '../components/ThemeProvider'
 
 import appCss from '../styles.css?url'
 
@@ -61,23 +62,27 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body className="font-sans text-ink bg-background antialiased [overflow-wrap:anywhere]">
-        <SearchProvider>
-          <div className="flex min-h-screen">
-            <aside className="border-hairline sticky top-0 hidden h-screen border-r md:flex">
-              <Sidebar />
-            </aside>
+        <ThemeProvider>
+          <SearchProvider>
+            <div className="flex min-h-screen">
+              <aside className="border-hairline sticky top-0 hidden h-screen border-r md:flex">
+                <Sidebar />
+              </aside>
 
-            <div className="flex min-w-0 flex-1 flex-col">
-              <MobileNav />
+              <div className="flex min-w-0 flex-1 flex-col">
+                <MobileNav />
 
-              <main className="flex-1 px-6 md:px-10 lg:px-16">
-                <div className="mx-auto w-full max-w-[1120px]">{children}</div>
-              </main>
+                <main className="flex-1 px-6 md:px-10 lg:px-16">
+                  <div className="mx-auto w-full max-w-[1120px]">
+                    {children}
+                  </div>
+                </main>
+              </div>
             </div>
-          </div>
 
-          <EnvBadge />
-        </SearchProvider>
+            <EnvBadge />
+          </SearchProvider>
+        </ThemeProvider>
 
         <TanStackDevtools
           config={{

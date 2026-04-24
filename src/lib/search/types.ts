@@ -19,7 +19,45 @@ export type NavigationData = {
   group: string
 }
 
+export type CommandOptionItem = {
+  type: 'command'
+  id: string
+  title: string
+  kicker: string
+  subtitle?: string
+  searchText: string
+  data: {
+    kind: 'run'
+    run: () => void
+    detail?: string
+    isActive: boolean
+  }
+}
+
+export type CommandData =
+  | {
+      kind: 'run'
+      run: () => void
+      detail?: string
+      isActive: boolean
+    }
+  | {
+      kind: 'options'
+      options: ReadonlyArray<CommandOptionItem>
+      detail?: string
+      activeOptionLabel?: string
+    }
+
 export type SearchItem =
+  | {
+      type: 'command'
+      id: string
+      title: string
+      kicker: string
+      subtitle?: string
+      searchText: string
+      data: CommandData
+    }
   | {
       type: 'navigation'
       id: string

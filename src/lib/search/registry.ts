@@ -1,6 +1,7 @@
 import type { ScopeDef, SearchItemType } from './types'
 
 export const SCOPES: ReadonlyArray<ScopeDef> = [
+  { code: 'cmd', itemType: 'command', label: 'Commands', groupLabel: 'Commands' },
   { code: 'go', itemType: 'navigation', label: 'Jump to', groupLabel: 'Jump to' },
   { code: 'neg', itemType: 'negative', label: 'Negatives', groupLabel: 'Negatives' },
   { code: 'frame', itemType: 'frame', label: 'Frames', groupLabel: 'Frames' },
@@ -30,6 +31,7 @@ export function groupLabelFor(type: SearchItemType): string {
 
 // Display order of groups in the results list when showing global results.
 export const GROUP_ORDER: ReadonlyArray<SearchItemType> = [
+  'command',
   'navigation',
   'negative',
   'frame',

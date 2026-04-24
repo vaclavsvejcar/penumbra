@@ -1,4 +1,5 @@
 import type { SearchItem } from '#/lib/search/types'
+import { CommandPreview } from './previews/CommandPreview'
 import { NavigationPreview } from './previews/NavigationPreview'
 import { CustomerPreview } from './previews/CustomerPreview'
 import { CustomerTypePreview } from './previews/CustomerTypePreview'
@@ -24,6 +25,8 @@ export function SearchPreviewPane({ item }: Props) {
   }
 
   switch (item.type) {
+    case 'command':
+      return <CommandPreview item={item} />
     case 'navigation':
       return <NavigationPreview item={item} />
     case 'customer':
