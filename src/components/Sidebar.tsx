@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useRouterState } from '@tanstack/react-router'
-import { Github, Search } from 'lucide-react'
-import ThemeToggle from './ThemeToggle'
+import { Search } from 'lucide-react'
+import { AboutDialog } from './AboutDialog'
 import { useSearch } from './SearchProvider'
 import { cn } from '#/lib/utils'
 import { getNavCounts, type NavCounts } from '#/server/navCounts'
@@ -167,22 +167,8 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
         </NavGroup>
       </div>
 
-      <div className="border-hairline flex items-center justify-between gap-2 border-t px-6 py-3">
-        <span className="text-ink-muted font-mono text-[0.65rem] tabular-nums">
-          v0.1.0
-        </span>
-        <div className="flex items-center gap-1">
-          <a
-            href="https://github.com/vaclavsvejcar/penumbra"
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Open Penumbra on GitHub"
-            className="text-ink-soft hover:text-ink hover:bg-muted inline-flex h-8 w-8 items-center justify-center rounded-sm transition-colors"
-          >
-            <Github className="h-4 w-4" strokeWidth={1.5} aria-hidden />
-          </a>
-          <ThemeToggle />
-        </div>
+      <div className="border-hairline border-t px-4 py-3">
+        <AboutDialog />
       </div>
     </nav>
   )

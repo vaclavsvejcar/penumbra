@@ -1,8 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { motion } from 'motion/react'
-import { ArrowUpRight } from 'lucide-react'
-import { cn } from '#/lib/utils'
-import { type ThemeMode, useTheme } from '#/components/ThemeProvider'
 import { getNavCounts } from '#/server/navCounts'
 
 export const Route = createFileRoute('/')({
@@ -77,80 +74,7 @@ function Home() {
         <Stat label="Editions" value={null} to="/editions" />
         <Stat label="Prints" value={null} to="/prints" />
       </motion.div>
-
-      <motion.div variants={item} className="mt-24 sm:mt-32">
-        <p className="kicker mb-6">N° 02 · Colophon</p>
-
-        <div className="border-hairline space-y-3 border-t pt-3 text-sm">
-          <p className="text-ink-soft max-w-xl">
-            Set in <em className="text-ink font-serif">Instrument Serif</em>,{' '}
-            <span className="text-ink">Geist</span>, and{' '}
-            <span className="text-ink font-mono text-[0.95em]">Geist Mono</span>
-            .
-          </p>
-
-          <p className="text-ink-soft max-w-xl">
-            <a
-              href="https://github.com/vaclavsvejcar/penumbra"
-              target="_blank"
-              rel="noreferrer"
-              className="text-ink hover:text-safelight inline-flex items-baseline gap-0.5 transition-colors"
-            >
-              Source on GitHub
-              <ArrowUpRight
-                className="h-3 w-3 self-center"
-                strokeWidth={1.5}
-                aria-hidden
-              />
-            </a>
-            <span className="text-ink-muted mx-2">·</span>
-            <span className="text-ink-muted font-mono text-[0.85em] tabular-nums">
-              v0.1.0
-            </span>
-          </p>
-
-          <ThemeSpecimen />
-        </div>
-      </motion.div>
     </motion.section>
-  )
-}
-
-const themeOptions = [
-  { value: 'light', label: 'Light' },
-  { value: 'auto', label: 'System' },
-  { value: 'dark', label: 'Dark' },
-] as const satisfies ReadonlyArray<{ value: ThemeMode; label: string }>
-
-function ThemeSpecimen() {
-  const { mode, setMode } = useTheme()
-  return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-      <span className="kicker">Appearance</span>
-      <div className="flex items-center gap-1">
-        {themeOptions.map((opt) => {
-          const isActive = opt.value === mode
-          return (
-            <button
-              key={opt.value}
-              type="button"
-              aria-pressed={isActive}
-              onClick={() => {
-                if (!isActive) setMode(opt.value)
-              }}
-              className={cn(
-                'rounded-sm px-2 py-0.5 transition-colors',
-                isActive
-                  ? 'bg-muted text-ink'
-                  : 'text-ink-muted hover:bg-muted/50 hover:text-ink',
-              )}
-            >
-              {opt.label}
-            </button>
-          )
-        })}
-      </div>
-    </div>
   )
 }
 
