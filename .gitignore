@@ -29,7 +29,10 @@ coverage
 # IDE (keep project-level .vscode/settings.json; ignore user-specific editors)
 .idea
 
-# SQLite databases
+# Penumbra dev app-data dir (DB + assets)
+.penumbra/
+
+# SQLite databases (safety net for custom DATABASE_URL paths)
 *.db
 *.db-journal
 *.db-wal

@@ -22,12 +22,46 @@ function platformDataDir(): string {
   return path.join(xdg, APP_NAME)
 }
 
+export function resolveAppDataDir(): string {
+  if (process.env.PENUMBRA_DATA_DIR && process.env.PENUMBRA_DATA_DIR.length > 0) {
+    return path.resolve(process.env.PENUMBRA_DATA_DIR)
+  }
+  if (process.env.NODE_ENV === 'production') {
+    return platformDataDir()
+  }
+  return path.resolve('./.penumbra')
+}
+
 export function resolveDatabasePath(): string {
   if (process.env.DATABASE_URL && process.env.DATABASE_URL.length > 0) {
     return path.resolve(process.env.DATABASE_URL)
   }
-  if (process.env.NODE_ENV === 'production') {
-    return path.join(platformDataDir(), 'penumbra.db')
+  return path.join(resolveAppDataDir(), 'penumbra.db')
+}
+
+export function resolveAssetsDir(): string {
+  if (process.env.PENUMBRA_ASSETS_DIR && process.env.PENUMBRA_ASSETS_DIR.length > 0) {
+    return path.resolve(process.env.PENUMBRA_ASSETS_DIR)
   }
-  return path.resolve('./penumbra.db')
+  return path.join(resolveAppDataDir(), 'assets')
+}
+
+export function resolveBackupStagingDir(): string {
+  return path.join(resolveAppDataDir(), '.backup-staging')
+}
+
+const SHA256_HEX = /^[a-f0-9]{64}$/
+
+export function assetPathForSha(sha256: string): string {
+  if (!SHA256_HEX.test(sha256)) {
+    throw new Error(
+      `assetPathForSha: expected lowercase hex sha256, got ${JSON.stringify(sha256)}`,
+    )
+  }
+  return path.join(
+    resolveAssetsDir(),
+    sha256.slice(0, 2),
+    sha256.slice(2, 4),
+    sha256,
+  )
 }

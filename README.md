@@ -40,7 +40,7 @@ Manual setup, if you prefer:
 
 ```bash
 pnpm install
-pnpm db:migrate       # creates penumbra.db in the project root
+pnpm db:migrate       # creates ./.penumbra/penumbra.db in dev
 pnpm dev              # http://localhost:3000
 ```
 
@@ -89,7 +89,7 @@ src/
 ├── db/
 │   ├── client.ts             # Drizzle client (better-sqlite3, WAL, FKs on)
 │   ├── schema.ts             # database schema
-│   ├── paths.ts              # DB path resolver (dev vs. OS data dir, DATABASE_URL override)
+│   ├── paths.ts              # app-data dir resolver (DB + assets, dev vs. OS data dir)
 │   └── migrations/           # generated SQL migrations
 ├── lib/                      # helpers: slug, validation, search utilities
 ├── router.tsx                # router config
@@ -97,7 +97,7 @@ src/
 └── styles.css                # design tokens (B/W/red OKLCH) + Tailwind
 ```
 
-The `penumbra.db` file is in `.gitignore` — each environment has its own local database. In dev the DB lives in the project root; production builds write to the OS data directory (`~/Library/Application Support/penumbra/` on macOS, `%LOCALAPPDATA%\penumbra\` on Windows, `$XDG_DATA_HOME/penumbra/` on Linux). Set `DATABASE_URL` to override.
+All persisted state lives under a single app-data directory: in dev `./.penumbra/` (gitignored), in production the OS data dir (`~/Library/Application Support/penumbra/` on macOS, `%LOCALAPPDATA%\penumbra\` on Windows, `$XDG_DATA_HOME/penumbra/` on Linux). The dir holds `penumbra.db` and (when binary uploads land) an `assets/` subdir alongside it. Override the whole dir with `PENUMBRA_DATA_DIR`, or override individually via `DATABASE_URL` and `PENUMBRA_ASSETS_DIR`.
 
 ## Design
 

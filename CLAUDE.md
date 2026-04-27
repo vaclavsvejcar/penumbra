@@ -64,8 +64,19 @@ Penumbra is a personal inventory app for a traditional film photographer who sel
 
 - Schema: `src/db/schema.ts`. Convention: every table has `createdAt` + `updatedAt` (unix timestamps); lookup tables add `archivedAt`, `sortOrder`, and a `(manufacturerId, code)` unique index where applicable.
 - Client: `src/db/client.ts` — better-sqlite3 with WAL + `foreign_keys = ON`. Exports `db` and `DB` type.
-- DB location: `src/db/paths.ts` — dev uses `./penumbra.db` in the repo root; production writes to the OS data dir (`~/Library/Application Support/penumbra/` on macOS, `%LOCALAPPDATA%\penumbra\` on Windows, `$XDG_DATA_HOME/penumbra/` on Linux). `DATABASE_URL` overrides both. Drizzle Kit uses the same resolver.
-- Migrations: generate to `src/db/migrations/` via `pnpm db:generate`; apply with `pnpm db:migrate`. `penumbra.db` is gitignored.
+- App-data layout: `src/db/paths.ts` resolves a single app-data dir, then derives `penumbra.db` and `assets/` from it. DEV: `./.penumbra/`. PROD: OS data dir (`~/Library/Application Support/penumbra/` on macOS, `%LOCALAPPDATA%\penumbra\` on Windows, `$XDG_DATA_HOME/penumbra/` on Linux). DEV/PROD layouts match — only the root differs.
+- Path overrides (priority order): `PENUMBRA_DATA_DIR` overrides the whole app-data dir; `DATABASE_URL` overrides only the DB file; `PENUMBRA_ASSETS_DIR` overrides only the assets dir. Drizzle Kit uses the same resolver.
+- Migrations: generate to `src/db/migrations/` via `pnpm db:generate`; apply with `pnpm db:migrate`. `.penumbra/` is gitignored (plus a `*.db*` net for custom `DATABASE_URL` locations).
+
+## Backup-readiness invariants (decided — implement when backup tool lands)
+
+**Full design: [`docs/backup.md`](docs/backup.md)**. Load-bearing rules below; honor them in any code that touches assets, the DB, or app-data paths.
+
+- **All persistent state lives under `resolveAppDataDir()`** — DB, assets, transient backup staging. No `~/.penumbra*`, no project-root sidecars, no OS keychain. Adding state outside this dir would silently break backup completeness.
+- **Assets are content-addressed and immutable.** Filename = lowercase-hex sha256, layout `assets/<sha[0:2]>/<sha[2:4]>/<sha>` — compose via `assetPathForSha()` in `src/db/paths.ts`. Files are written once, never modified. Re-upload of identical content is a no-op write. Don't introduce mutable assets — atomicity assumptions in backup depend on this.
+- **Asset GC must be lockable.** When the GC pass exists it must acquire a lock that the backup tool also takes. Don't write a "fire-and-forget" GC.
+- **DB snapshot for backup uses `VACUUM INTO`** (or `db.backup()` from better-sqlite3) — never raw `cp` of `penumbra.db`. WAL/SHM files are intentionally excluded from the archive.
+- **Backup manifest format** is typed in `src/lib/backup.ts` (`BackupManifest`, `BACKUP_FORMAT_VERSION`). Bump the format version if its shape ever changes; don't silently extend it.
 
 ## Verification workflow
 
